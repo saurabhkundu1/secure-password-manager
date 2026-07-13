@@ -1,0 +1,15 @@
+<resources>
+    <!-- Base application theme -->
+    <style name="Theme.SecurePass" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Primary brand color (Trustworthy Deep Teal) -->
+        <item name="colorPrimary">#00897B</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">#FFB300</item>
+        <item name="colorOnSecondary">#000000</item>
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">#00695C</item>
+        <!-- Overall background -->
+        <item name="android:windowBackground">#FAFAFA</item>
+    </style>
+</resources>

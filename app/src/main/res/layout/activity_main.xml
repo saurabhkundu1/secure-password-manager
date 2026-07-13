@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:paddingTop="64dp"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:background="#FAFAFA">
+
+    <!-- App Icon (a simple shield, you can replace later) -->
+    <ImageView
+        android:id="@+id/ivLockIcon"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@android:drawable/ic_lock_idle_lock"
+        android:contentDescription="Secure Pass"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Secure Pass"
+        android:textSize="28sp"
+        android:textColor="#00897B"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- Instruction Text (changes based on setup/unlock) -->
+    <TextView
+        android:id="@+id/tvInstruction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enter your 6-digit code"
+        android:textSize="18sp"
+        android:textColor="#616161"
+        android:layout_marginBottom="24dp"/>
+
+    <!-- 6-dot PIN display -->
+    <LinearLayout
+        android:id="@+id/pinDotsContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="32dp">
+
+        <!-- We'll generate these dots programmatically in Java,
+             but we'll keep one for reference. Actually, let's create them in Java
+             to avoid duplication. So remove the placeholder dots.
+             Just keep the empty container. -->
+    </LinearLayout>
+
+    <!-- Number Pad in a GridLayout (3 columns) -->
+    <GridLayout
+        android:id="@+id/gridNumberPad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:columnCount="3"
+        android:rowCount="4"
+        android:gravity="center">
+
+        <!-- Row 1: 1, 2, 3 -->
+        <Button android:id="@+id/btn1" style="@style/NumberPadButton" android:text="1"/>
+        <Button android:id="@+id/btn2" style="@style/NumberPadButton" android:text="2"/>
+        <Button android:id="@+id/btn3" style="@style/NumberPadButton" android:text="3"/>
+
+        <!-- Row 2: 4, 5, 6 -->
+        <Button android:id="@+id/btn4" style="@style/NumberPadButton" android:text="4"/>
+        <Button android:id="@+id/btn5" style="@style/NumberPadButton" android:text="5"/>
+        <Button android:id="@+id/btn6" style="@style/NumberPadButton" android:text="6"/>
+
+        <!-- Row 3: 7, 8, 9 -->
+        <Button android:id="@+id/btn7" style="@style/NumberPadButton" android:text="7"/>
+        <Button android:id="@+id/btn8" style="@style/NumberPadButton" android:text="8"/>
+        <Button android:id="@+id/btn9" style="@style/NumberPadButton" android:text="9"/>
+
+        <!-- Row 4: Delete, 0, Done/Submit -->
+        <Button android:id="@+id/btnDelete" style="@style/NumberPadButton" android:text="⌫"
+            android:textColor="#D32F2F"/>
+        <Button android:id="@+id/btn0" style="@style/NumberPadButton" android:text="0"/>
+        <Button android:id="@+id/btnSubmit" style="@style/NumberPadButton" android:text="✓"
+            android:textColor="#00897B"/>
+    </GridLayout>
+
+    <!-- Error message (hidden by default) -->
+    <TextView
+        android:id="@+id/tvError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Wrong code. Try again."
+        android:textSize="14sp"
+        android:textColor="#D32F2F"
+        android:visibility="gone"
+        android:layout_marginTop="16dp"/>
+
+</LinearLayout>
