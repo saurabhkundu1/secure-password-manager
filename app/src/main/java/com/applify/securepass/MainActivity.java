@@ -10,6 +10,7 @@ import android.widget.GridLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import com.applify.securepass.data.VaultManager;
 import com.google.android.material.snackbar.Snackbar;
+import android.content.Intent;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -157,14 +158,10 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 // Unlock mode
                 vaultManager.unlock(code);
-                // Success! Move to vault list (next step)
-                Snackbar.make(findViewById(android.R.id.content), "Unlocked successfully!", Snackbar.LENGTH_SHORT).show();
-                // TODO: Start VaultActivity (we'll create it soon)
-                // For now, we'll just reset the UI
-                enteredCode = "";
-                updateDotDisplay();
-                tvInstruction.setText("Unlocked! (Vault screen coming soon)");
-                ivLockIcon.setImageResource(android.R.drawable.ic_lock_idle_lock); // temporary
+                Intent intent = new Intent(MainActivity.this, VaultActivity.class);
+                intent.putExtra("USER_CODE", code);
+                startActivity(intent);
+                finish();  // so the user can’t press Back to return to the unlock screen
             }
         } catch (Exception e) {
             tvError.setText("Wrong code. Please try again.");

@@ -17,6 +17,7 @@ public class VaultManager {
     private File baseDir;
     private SecretKey currentKey;
     private Gson gson = new Gson();
+    private static SecretKey globalKey;   // session key shared across activities
 
     // Constructor for normal use (app context)
     public VaultManager(Context context) {
@@ -28,18 +29,43 @@ public class VaultManager {
         this.baseDir = baseDir;
     }
 
+    // ---------- Static key management ----------
+    public static SecretKey getGlobalKey() {
+        return globalKey;
+    }
+
+    public static void setGlobalKey(SecretKey key) {
+        globalKey = key;
+    }
+
+    public static void clearGlobalKey() {
+        globalKey = null;
+    }
+
+    // ---------- Instance key management ----------
+    public SecretKey getCurrentKey() {
+        return currentKey;
+    }
+
+    // Unlock using an already-derived key (for biometric flow)
+    public void unlockWithKey(SecretKey key) {
+        this.currentKey = key;
+    }
+
     // ---------- Setup & Unlock ----------
     public void setupNewVault(String userCode) throws Exception {
         byte[] salt = new byte[16];
         new SecureRandom().nextBytes(salt);
         saveSalt(salt);
         currentKey = CryptoManager.deriveKey(userCode, salt);
+        setGlobalKey(currentKey);   // share the key
         saveEntries(new ArrayList<>());
     }
 
     public void unlock(String userCode) throws Exception {
         byte[] salt = loadSalt();
         currentKey = CryptoManager.deriveKey(userCode, salt);
+        setGlobalKey(currentKey);   // share the key
     }
 
     // ---------- Vault Operations ----------
