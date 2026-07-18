@@ -13,7 +13,7 @@ Store credentials locally with **AES-256 encryption**, unlock with a **6-digit P
 - 📝 **Secure notes** – Store security questions per entry.
 
 ## Screenshots
-_(Add screenshots later)_
+_(COMING SOON !!!)_
 
 ## Installation
 1. Clone the repo: `git clone https://github.com/saurabhkundu1/secure-password-manager.git`
