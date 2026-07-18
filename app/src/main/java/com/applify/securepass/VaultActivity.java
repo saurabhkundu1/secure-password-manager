@@ -3,6 +3,7 @@ package com.applify.securepass;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 import androidx.annotation.Nullable;
@@ -23,7 +24,8 @@ public class VaultActivity extends AppCompatActivity {
     private LinearLayout layoutEmpty;
     private VaultAdapter adapter;
     private List<VaultItem> entries = new ArrayList<>();
-    private String userCode;   // may be null if unlocked via biometric
+    private String userCode;
+    private Button btnAddFirst;   // <-- for empty state
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -36,21 +38,27 @@ public class VaultActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerViewVault);
         layoutEmpty = findViewById(R.id.layoutEmpty);
         FloatingActionButton fabAdd = findViewById(R.id.fabAdd);
+        btnAddFirst = findViewById(R.id.btnAddFirst);   // <-- bind the empty-state button
+
+        // Empty-state button click → open AddEditActivity
+        btnAddFirst.setOnClickListener(v -> {
+            Intent intent = new Intent(VaultActivity.this, AddEditActivity.class);
+            intent.putExtra("USER_CODE", userCode);
+            startActivity(intent);
+        });
 
         // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new VaultAdapter(entries,
                 item -> {
-                    // Edit entry: open AddEditActivity with the item's ID
                     Intent intent = new Intent(VaultActivity.this, AddEditActivity.class);
                     intent.putExtra("USER_CODE", userCode);
                     intent.putExtra("ITEM_ID", item.id);
                     startActivity(intent);
                 },
                 item -> {
-                    // Delete entry
                     try {
-                        vaultManager.unlock(userCode);   // ensure unlocked (userCode may be null if biometric)
+                        vaultManager.unlock(userCode);
                         List<VaultItem> list = vaultManager.loadEntries();
                         list.removeIf(i -> i.id.equals(item.id));
                         vaultManager.saveEntries(list);
@@ -62,7 +70,7 @@ public class VaultActivity extends AppCompatActivity {
                 });
         recyclerView.setAdapter(adapter);
 
-        // Try to get the session key (set by biometric or code unlock)
+        // Try biometric key first, then fall back to user code
         SecretKey sessionKey = VaultManager.getGlobalKey();
         if (sessionKey != null) {
             vaultManager.unlockWithKey(sessionKey);
@@ -79,7 +87,6 @@ public class VaultActivity extends AppCompatActivity {
                     return;
                 }
             } else {
-                // Neither key nor code – something wrong, go back to unlock
                 finish();
                 return;
             }
@@ -99,7 +106,7 @@ public class VaultActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        loadEntries();   // refresh list when returning from AddEditActivity
+        loadEntries();
     }
 
     private void loadEntries() {
@@ -117,9 +124,11 @@ public class VaultActivity extends AppCompatActivity {
         if (entries.isEmpty()) {
             layoutEmpty.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
+            btnAddFirst.setVisibility(View.VISIBLE);   // show the big button
         } else {
             layoutEmpty.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
+            btnAddFirst.setVisibility(View.GONE);      // hide it when list is shown
         }
     }
 }

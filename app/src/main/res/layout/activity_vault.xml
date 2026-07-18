@@ -35,6 +35,16 @@
             android:text="No passwords saved yet"
             android:textSize="18sp"
             android:textColor="#757575"/>
+
+        <Button
+            android:id="@+id/btnAddFirst"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add Your First Password"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/teal_700"
+            android:layout_marginTop="24dp"
+            style="@style/Widget.MaterialComponents.Button"/>
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
