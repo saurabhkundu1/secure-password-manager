@@ -22,6 +22,10 @@ public class CryptoManager {
     public static SecretKey deriveKey(String userCode, byte[] salt)
             throws NoSuchAlgorithmException, InvalidKeySpecException {
 
+        if (userCode == null) {
+            throw new IllegalArgumentException("User code cannot be null for key derivation");
+        }
+
         int iterations = 100_000;
         int keyLength = 256;
 

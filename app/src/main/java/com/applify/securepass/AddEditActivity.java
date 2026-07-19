@@ -44,7 +44,9 @@ public class AddEditActivity extends AppCompatActivity {
 
     private void loadExistingItem(String itemId) {
         try {
-            vaultManager.unlock(userCode);
+            if (!vaultManager.isUnlocked() && userCode != null) {
+                vaultManager.unlock(userCode);
+            }
             for (VaultItem item : vaultManager.loadEntries()) {
                 if (item.id.equals(itemId)) {
                     etWebsite.setText(item.website);
@@ -69,7 +71,9 @@ public class AddEditActivity extends AppCompatActivity {
         }
 
         try {
-            vaultManager.unlock(userCode);
+            if (!vaultManager.isUnlocked() && userCode != null) {
+                vaultManager.unlock(userCode);
+            }
             java.util.List<VaultItem> entries = vaultManager.loadEntries();
 
             if (editingItemId != null) {

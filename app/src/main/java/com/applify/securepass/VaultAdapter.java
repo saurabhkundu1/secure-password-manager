@@ -37,12 +37,20 @@ public class VaultAdapter extends RecyclerView.Adapter<VaultAdapter.ViewHolder> 
         VaultItem item = items.get(position);
         holder.text1.setText(item.website);
         holder.text2.setText(item.username);
-        holder.itemView.setOnClickListener(v -> listener.onItemClick(item));
+
+        // Tap: copy password to clipboard (auto‑clears)
+        holder.itemView.setOnClickListener(v -> {
+            ClipboardUtil.copyAndClear(v.getContext(), item.website, item.password, 30);
+        });
+
+        // Long‑press: delete entry (confirmation dialog)
         holder.itemView.setOnLongClickListener(v -> {
             new android.app.AlertDialog.Builder(v.getContext())
                     .setTitle("Delete Entry")
                     .setMessage("Delete " + item.website + "?")
-                    .setPositiveButton("Delete", (d, w) -> deleteListener.onDelete(item))
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        if (deleteListener != null) deleteListener.onDelete(item);
+                    })
                     .setNegativeButton("Cancel", null)
                     .show();
             return true;

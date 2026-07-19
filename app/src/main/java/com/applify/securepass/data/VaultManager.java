@@ -44,12 +44,20 @@ public class VaultManager {
 
     // ---------- Instance key management ----------
     public SecretKey getCurrentKey() {
+        if (currentKey == null) {
+            currentKey = globalKey;
+        }
         return currentKey;
+    }
+
+    public boolean isUnlocked() {
+        return getCurrentKey() != null;
     }
 
     // Unlock using an already-derived key (for biometric flow)
     public void unlockWithKey(SecretKey key) {
         this.currentKey = key;
+        setGlobalKey(key);
     }
 
     // ---------- Setup & Unlock ----------
@@ -63,6 +71,7 @@ public class VaultManager {
     }
 
     public void unlock(String userCode) throws Exception {
+        if (isUnlocked()) return;
         byte[] salt = loadSalt();
         currentKey = CryptoManager.deriveKey(userCode, salt);
         setGlobalKey(currentKey);   // share the key
@@ -70,19 +79,21 @@ public class VaultManager {
 
     // ---------- Vault Operations ----------
     public List<VaultItem> loadEntries() throws Exception {
-        if (currentKey == null) throw new IllegalStateException("Vault not unlocked!");
+        SecretKey key = getCurrentKey();
+        if (key == null) throw new IllegalStateException("Vault not unlocked!");
         File file = new File(baseDir, VAULT_FILE);
         if (!file.exists()) return new ArrayList<>();
         String encryptedData = readFile(file);
-        String json = CryptoManager.decrypt(encryptedData, currentKey);
+        String json = CryptoManager.decrypt(encryptedData, key);
         Type listType = new TypeToken<List<VaultItem>>() {}.getType();
         return gson.fromJson(json, listType);
     }
 
     public void saveEntries(List<VaultItem> entries) throws Exception {
-        if (currentKey == null) throw new IllegalStateException("Vault not unlocked!");
+        SecretKey key = getCurrentKey();
+        if (key == null) throw new IllegalStateException("Vault not unlocked!");
         String json = gson.toJson(entries);
-        String encrypted = CryptoManager.encrypt(json, currentKey);
+        String encrypted = CryptoManager.encrypt(json, key);
         File file = new File(baseDir, VAULT_FILE);
         writeFile(file, encrypted);
     }
