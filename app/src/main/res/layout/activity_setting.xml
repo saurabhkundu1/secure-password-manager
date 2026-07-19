@@ -164,28 +164,15 @@
                 app:icon="@android:drawable/ic_menu_info_details"
                 app:iconTint="?attr/colorPrimary"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Send feedback or report an issue:"
-                android:textSize="14sp"
-                android:textColor="?android:attr/textColorSecondary"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="4dp"/>
-
-            <Spinner
-                android:id="@+id/spinnerFeedback"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="48dp"/>
-
             <Button
-                android:id="@+id/btnSendFeedback"
+                android:id="@+id/btnContactDeveloper"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Send Feedback Email"
+                android:text="Contact Support &amp; Feedback"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:textColor="?attr/colorPrimary"/>
+                android:textColor="?attr/colorPrimary"
+                app:icon="@android:drawable/ic_dialog_email"
+                app:iconTint="?attr/colorPrimary"/>
 
             <View
                 android:layout_width="match_parent"

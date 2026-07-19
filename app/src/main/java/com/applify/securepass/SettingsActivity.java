@@ -45,11 +45,11 @@ import javax.crypto.SecretKey;
 
 public class SettingsActivity extends BaseLockActivity {
     private SwitchMaterial switchFingerprint;
-    private Button btnChangeCode, btnLockVault, btnExport, btnImport, btnGithub, btnSendFeedback;
+    private Button btnChangeCode, btnLockVault, btnExport, btnImport, btnGithub, btnContactDeveloper;
     private SharedPreferences prefs;
     private VaultManager vaultManager;
 
-    private Spinner spinnerAutoLock, spinnerFeedback;
+    private Spinner spinnerAutoLock;
 
     private final ActivityResultLauncher<String> createDocumentLauncher =
             registerForActivityResult(new ActivityResultContracts.CreateDocument("text/plain"), this::onBackupFileCreated);
@@ -119,8 +119,7 @@ public class SettingsActivity extends BaseLockActivity {
         btnExport = findViewById(R.id.btnExport);
         btnImport = findViewById(R.id.btnImport);
         btnGithub = findViewById(R.id.btnGithub);
-        btnSendFeedback = findViewById(R.id.btnSendFeedback);
-        spinnerFeedback = findViewById(R.id.spinnerFeedback);
+        btnContactDeveloper = findViewById(R.id.btnContactDeveloper);
 
         // Set initial switch state
         boolean fingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false);
@@ -136,7 +135,6 @@ public class SettingsActivity extends BaseLockActivity {
         // Restore theme selections
         restoreThemeSettings();
         setupAutoLockSpinner();
-        setupFeedbackSpinner();
 
         // Fingerprint toggle listener
         switchFingerprint.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -205,14 +203,13 @@ public class SettingsActivity extends BaseLockActivity {
             startActivity(intent);
         });
 
-        btnSendFeedback.setOnClickListener(v -> {
-            String feedbackType = spinnerFeedback.getSelectedItem().toString();
+        btnContactDeveloper.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_SENDTO);
             intent.setData(Uri.parse("mailto:"));
-            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"saurabhkundu1@gmail.com"});
-            intent.putExtra(Intent.EXTRA_SUBJECT, "Secure Pass Feedback: " + feedbackType);
+            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"kundusaurabh8@gmail.com"});
+            intent.putExtra(Intent.EXTRA_SUBJECT, "Secure Pass: Support & Feedback");
             try {
-                startActivity(Intent.createChooser(intent, "Send feedback via..."));
+                startActivity(Intent.createChooser(intent, "Contact Developer via..."));
             } catch (android.content.ActivityNotFoundException ex) {
                 Toast.makeText(this, "No email app installed.", Toast.LENGTH_SHORT).show();
             }
@@ -262,13 +259,6 @@ public class SettingsActivity extends BaseLockActivity {
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
         });
-    }
-
-    private void setupFeedbackSpinner() {
-        String[] options = {"General Feedback", "Report an Issue", "Feature Suggestion", "Security Concern"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, options);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerFeedback.setAdapter(adapter);
     }
 
     private void buildColorPalette() {

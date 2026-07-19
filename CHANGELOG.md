@@ -5,9 +5,14 @@ All notable changes to the **Secure Pass** project will be documented in this fi
 ## [1.0.1] - 2026-07-19
 
 ### Added ✨
-- **Support & Feedback Section**: New area in Settings to help users connect.
+- **Support & Feedback Section**: A dedicated area in Settings for user communication.
 - **GitHub Integration**: Direct link to the official repository.
-- **Feedback Dropdown**: Categorized email feedback (Issues, Suggestions, Security) for better communication.
+
+### Improved 🎨
+- **Minimalist Icon**: Redesigned the app icon to a clean, bold lock for a modern look.
+- **Simplified Support**: Replaced the complex feedback system with a single offline contact button.
+- **Privacy Focus**: Maintained 100% offline status while enabling developer contact via system mail app.
+- **Developer Info**: Updated contact email to `kundusaurabh8@gmail.com`.
 
 ## [1.0.0] - 2026-07-19
 
