@@ -12,6 +12,7 @@ public class VaultItem {
     public String username;     // Login / email
     public String password;     // The actual password (stored encrypted in file)
     public String notes;        // User notes, security questions, etc.
+    public boolean isFavorite = false;
     public long createdAt;      // Timestamp when entry was created
     public long lastChanged;    // Timestamp when entry was last modified
 

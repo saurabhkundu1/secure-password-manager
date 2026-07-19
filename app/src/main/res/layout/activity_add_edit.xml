@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#FAFAFA">
+    android:background="?android:attr/colorBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -54,13 +54,51 @@
                 android:inputType="textPassword"/>
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Password Strength Indicator -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:id="@+id/tvStrengthLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Strength: "
+                android:textSize="14sp"
+                android:textColor="?android:attr/textColorSecondary"/>
+
+            <ProgressBar
+                android:id="@+id/progressStrength"
+                style="@android:style/Widget.Material.ProgressBar.Horizontal"
+                android:layout_width="0dp"
+                android:layout_height="8dp"
+                android:layout_weight="1"
+                android:max="100"
+                android:progress="0"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:progressBackgroundTint="?android:attr/textColorTertiary"/>
+
+            <TextView
+                android:id="@+id/tvStrengthText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Weak"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#D32F2F"/>
+        </LinearLayout>
+
         <Button
             android:id="@+id/btnGeneratePassword"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Generate Strong Password"
             style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:textColor="@color/teal_700"
+            android:textColor="?attr/colorPrimary"
             android:layout_marginTop="8dp"/>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -84,7 +122,8 @@
             android:layout_height="wrap_content"
             android:text="Save"
             android:layout_marginTop="32dp"
-            android:backgroundTint="@color/teal_700"
+            android:backgroundTint="?attr/colorPrimary"
+            android:textColor="?attr/colorOnPrimary"
             style="@style/Widget.MaterialComponents.Button"/>
     </LinearLayout>
 </ScrollView>

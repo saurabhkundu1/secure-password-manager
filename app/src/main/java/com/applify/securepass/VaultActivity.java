@@ -3,6 +3,8 @@ package com.applify.securepass;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,17 +22,22 @@ import com.applify.securepass.data.VaultItem;
 import com.applify.securepass.data.VaultManager;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.crypto.SecretKey;
 
-public class VaultActivity extends AppCompatActivity {
+public class VaultActivity extends BaseLockActivity {
 
     private VaultManager vaultManager;
     private RecyclerView recyclerView;
     private LinearLayout layoutEmpty;
+    private TextInputEditText etSearch;
     private VaultAdapter adapter;
     private List<VaultItem> entries = new ArrayList<>();
+    private List<VaultItem> allEntries = new ArrayList<>();
     private String userCode;   // may be null if unlocked via biometric
     private Button btnAddFirst;
 
@@ -48,6 +55,7 @@ public class VaultActivity extends AppCompatActivity {
 
         recyclerView = findViewById(R.id.recyclerViewVault);
         layoutEmpty = findViewById(R.id.layoutEmpty);
+        etSearch = findViewById(R.id.etSearch);
         FloatingActionButton fabAdd = findViewById(R.id.fabAdd);
         btnAddFirst = findViewById(R.id.btnAddFirst);
 
@@ -69,21 +77,27 @@ public class VaultActivity extends AppCompatActivity {
                     startActivity(intent);
                 },
                 item -> {
-                    // Delete entry (used by dialog and long‑press in adapter)
-                    try {
-                        if (!vaultManager.isUnlocked() && userCode != null) {
-                            vaultManager.unlock(userCode);
-                        }
-                        List<VaultItem> list = vaultManager.loadEntries();
-                        list.removeIf(i -> i.id.equals(item.id));
-                        vaultManager.saveEntries(list);
-                        loadEntries();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Toast.makeText(VaultActivity.this, "Delete failed", Toast.LENGTH_SHORT).show();
-                    }
+                    // Delete entry
+                    deleteItem(item);
+                },
+                item -> {
+                    // Toggle Favorite
+                    item.isFavorite = !item.isFavorite;
+                    saveAllAndRefresh();
                 });
         recyclerView.setAdapter(adapter);
+
+        // Search listener
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterEntries(s.toString());
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
 
         // Swipe to delete
         setupSwipeToDelete();
@@ -129,24 +143,79 @@ public class VaultActivity extends AppCompatActivity {
 
     private void loadEntries() {
         try {
-            entries.clear();
-            entries.addAll(vaultManager.loadEntries());
-            adapter.notifyDataSetChanged();
+            allEntries.clear();
+            allEntries.addAll(vaultManager.loadEntries());
+            filterEntries(etSearch.getText() != null ? etSearch.getText().toString() : "");
             toggleEmptyState();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private void filterEntries(String query) {
+        entries.clear();
+        if (query.isEmpty()) {
+            entries.addAll(allEntries);
+        } else {
+            String lowerQuery = query.toLowerCase();
+            for (VaultItem item : allEntries) {
+                if (item.website.toLowerCase().contains(lowerQuery) ||
+                    item.username.toLowerCase().contains(lowerQuery)) {
+                    entries.add(item);
+                }
+            }
+        }
+        sortEntries();
+        adapter.notifyDataSetChanged();
+    }
+
+    private void sortEntries() {
+        Collections.sort(entries, (a, b) -> {
+            if (a.isFavorite != b.isFavorite) {
+                return a.isFavorite ? -1 : 1;
+            }
+            return a.website.compareToIgnoreCase(b.website);
+        });
+    }
+
+    private void saveAllAndRefresh() {
+        try {
+            if (!vaultManager.isUnlocked() && userCode != null) {
+                vaultManager.unlock(userCode);
+            }
+            vaultManager.saveEntries(allEntries);
+            loadEntries();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Failed to save changes", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void deleteItem(VaultItem item) {
+        try {
+            if (!vaultManager.isUnlocked() && userCode != null) {
+                vaultManager.unlock(userCode);
+            }
+            allEntries.removeIf(i -> i.id.equals(item.id));
+            vaultManager.saveEntries(allEntries);
+            loadEntries();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Delete failed", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void toggleEmptyState() {
-        if (entries.isEmpty()) {
+        if (allEntries.isEmpty()) {
             layoutEmpty.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
             btnAddFirst.setVisibility(View.VISIBLE);
+            findViewById(R.id.tilSearch).setVisibility(View.GONE);
         } else {
             layoutEmpty.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
             btnAddFirst.setVisibility(View.GONE);
+            findViewById(R.id.tilSearch).setVisibility(View.VISIBLE);
         }
     }
 
@@ -168,19 +237,7 @@ public class VaultActivity extends AppCompatActivity {
                         .setTitle("Delete")
                         .setMessage("Delete " + item.website + "?")
                         .setPositiveButton("Delete", (dialog, which) -> {
-                            try {
-                                if (!vaultManager.isUnlocked() && userCode != null) {
-                                    vaultManager.unlock(userCode);
-                                }
-                                List<VaultItem> list = vaultManager.loadEntries();
-                                list.removeIf(i -> i.id.equals(item.id));
-                                vaultManager.saveEntries(list);
-                                loadEntries();
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                Toast.makeText(VaultActivity.this, "Delete failed", Toast.LENGTH_SHORT).show();
-                                loadEntries(); // refresh to revert swipe visually
-                            }
+                            deleteItem(item);
                         })
                         .setNegativeButton("Cancel", (dialog, which) -> {
                             adapter.notifyItemChanged(position); // cancel swipe

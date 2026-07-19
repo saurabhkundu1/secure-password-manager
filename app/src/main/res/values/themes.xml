@@ -10,7 +10,7 @@
         <!-- Status bar color -->
         <item name="android:statusBarColor">@color/palette_teal_variant</item>
         <!-- Overall background -->
-        <item name="android:windowBackground">?android:attr/windowBackground</item>
+        <item name="android:windowBackground">?android:attr/colorBackground</item>
     </style>
 
     <!-- Palette themes -->
@@ -34,5 +34,45 @@
     <style name="Theme.SecurePass.Red" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_red_primary</item>
         <item name="android:statusBarColor">@color/palette_red_variant</item>
+    </style>
+
+    <style name="Theme.SecurePass.Orange" parent="Theme.SecurePass">
+        <item name="colorPrimary">@color/palette_orange_primary</item>
+        <item name="android:statusBarColor">@color/palette_orange_variant</item>
+    </style>
+
+    <style name="Theme.SecurePass.Indigo" parent="Theme.SecurePass">
+        <item name="colorPrimary">@color/palette_indigo_primary</item>
+        <item name="android:statusBarColor">@color/palette_indigo_variant</item>
+    </style>
+
+    <style name="Theme.SecurePass.Pink" parent="Theme.SecurePass">
+        <item name="colorPrimary">@color/palette_pink_primary</item>
+        <item name="android:statusBarColor">@color/palette_pink_variant</item>
+    </style>
+
+    <style name="Theme.SecurePass.Onyx" parent="Theme.SecurePass">
+        <item name="colorPrimary">@color/palette_onyx_primary</item>
+        <item name="android:statusBarColor">@color/palette_onyx_variant</item>
+    </style>
+
+    <style name="Theme.SecurePass.Yellow" parent="Theme.SecurePass">
+        <item name="colorPrimary">@color/palette_yellow_primary</item>
+        <item name="android:statusBarColor">@color/palette_yellow_variant</item>
+    </style>
+
+    <style name="Theme.SecurePass.Cyan" parent="Theme.SecurePass">
+        <item name="colorPrimary">@color/palette_cyan_primary</item>
+        <item name="android:statusBarColor">@color/palette_cyan_variant</item>
+    </style>
+
+    <style name="Theme.SecurePass.Brown" parent="Theme.SecurePass">
+        <item name="colorPrimary">@color/palette_brown_primary</item>
+        <item name="android:statusBarColor">@color/palette_brown_variant</item>
+    </style>
+
+    <style name="Theme.SecurePass.Grey" parent="Theme.SecurePass">
+        <item name="colorPrimary">@color/palette_grey_primary</item>
+        <item name="android:statusBarColor">@color/palette_grey_variant</item>
     </style>
 </resources>

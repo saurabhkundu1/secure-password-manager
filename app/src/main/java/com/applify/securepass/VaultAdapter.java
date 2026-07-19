@@ -17,16 +17,20 @@ public class VaultAdapter extends RecyclerView.Adapter<VaultAdapter.ViewHolder> 
 
     public interface OnItemClickListener { void onItemClick(VaultItem item); }
     public interface OnItemDeleteListener { void onDelete(VaultItem item); }
+    public interface OnFavoriteToggleListener { void onToggle(VaultItem item); }
 
     private List<VaultItem> items;
     private OnItemClickListener listener;
     private OnItemDeleteListener deleteListener;
+    private OnFavoriteToggleListener favoriteToggleListener;
 
     public VaultAdapter(List<VaultItem> items, OnItemClickListener listener,
-                        OnItemDeleteListener deleteListener) {
+                        OnItemDeleteListener deleteListener,
+                        OnFavoriteToggleListener favoriteToggleListener) {
         this.items = items;
         this.listener = listener;
         this.deleteListener = deleteListener;
+        this.favoriteToggleListener = favoriteToggleListener;
     }
 
     @NonNull @Override
@@ -39,22 +43,25 @@ public class VaultAdapter extends RecyclerView.Adapter<VaultAdapter.ViewHolder> 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         VaultItem item = items.get(position);
-        holder.text1.setText(item.website);
+        holder.text1.setText((item.isFavorite ? "★ " : "☆ ") + item.website);
         holder.text2.setText(item.username);
 
         // Item click: show action dialog
         holder.itemView.setOnClickListener(v -> {
             new AlertDialog.Builder(v.getContext())
                     .setTitle(item.website)
-                    .setItems(new CharSequence[]{"Copy Password", "Edit", "Delete"}, (dialog, which) -> {
+                    .setItems(new CharSequence[]{"Copy Password", (item.isFavorite ? "Remove from Favorites" : "Mark as Favorite"), "Edit", "Delete"}, (dialog, which) -> {
                         switch (which) {
                             case 0: // Copy
                                 ClipboardUtil.copyAndClear(v.getContext(), item.website, item.password, 30);
                                 break;
-                            case 1: // Edit
+                            case 1: // Toggle Favorite
+                                if (favoriteToggleListener != null) favoriteToggleListener.onToggle(item);
+                                break;
+                            case 2: // Edit
                                 if (listener != null) listener.onItemClick(item);
                                 break;
-                            case 2: // Delete
+                            case 3: // Delete
                                 if (deleteListener != null) deleteListener.onDelete(item);
                                 break;
                         }

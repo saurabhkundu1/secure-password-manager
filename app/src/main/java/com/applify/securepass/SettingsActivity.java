@@ -7,31 +7,72 @@ import android.os.Bundle;
 import android.text.format.DateUtils;
 import android.view.View;
 import android.widget.Button;
+import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.net.Uri;
+import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
+import com.applify.securepass.crypto.CryptoManager;
+import com.applify.securepass.data.VaultItem;
 import com.applify.securepass.data.VaultManager;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.List;
 
 import javax.crypto.SecretKey;
 
-public class SettingsActivity extends AppCompatActivity {
+public class SettingsActivity extends BaseLockActivity {
     private SwitchMaterial switchFingerprint;
-    private Button btnChangeCode, btnLockVault;
+    private Button btnChangeCode, btnLockVault, btnExport, btnImport;
     private SharedPreferences prefs;
     private VaultManager vaultManager;
+
+    private final ActivityResultLauncher<String> createDocumentLauncher =
+            registerForActivityResult(new ActivityResultContracts.CreateDocument("text/plain"), this::onBackupFileCreated);
+
+    private final ActivityResultLauncher<String[]> openDocumentLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), this::onBackupFileOpened);
 
     // Theme preferences keys
     private static final String KEY_THEME_MODE = "theme_mode";      // 0=light, 1=dark, 2=system
     private static final String KEY_COLOR_PALETTE = "color_palette"; // 0=teal, 1=blue, 2=green, 3=purple, 4=red
+    private static final String KEY_AUTO_LOCK = "auto_lock_time";
+
+    // Auto-lock values in ms
+    private static final long[] AUTO_LOCK_VALUES = {
+            0,              // Never
+            60 * 1000,      // 1 minute
+            5 * 60 * 1000,  // 5 minutes
+            15 * 60 * 1000, // 15 minutes
+            30 * 60 * 1000  // 30 minutes
+    };
+
+    private RadioGroup rgThemeMode;
+    private RadioButton rbLight, rbDark, rbSystem;
+    private GridLayout llColorPalette;
+    private Spinner spinnerAutoLock;
 
     // Color palette definitions (hex)
     private static final int[] PALETTE_COLORS = {
@@ -39,12 +80,16 @@ public class SettingsActivity extends AppCompatActivity {
             0xFF1976D2, // Blue
             0xFF388E3C, // Green
             0xFF7B1FA2, // Purple
-            0xFFD32F2F  // Red
+            0xFFD32F2F, // Red
+            0xFFF57C00, // Orange
+            0xFF3F51B5, // Indigo
+            0xFFD81B60, // Pink
+            0xFF212121, // Onyx
+            0xFFFBC02D, // Yellow
+            0xFF00BCD4, // Cyan
+            0xFF795548, // Brown
+            0xFF9E9E9E  // Grey
     };
-
-    private RadioGroup rgThemeMode;
-    private RadioButton rbLight, rbDark, rbSystem;
-    private LinearLayout llColorPalette;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -69,6 +114,9 @@ public class SettingsActivity extends AppCompatActivity {
         rbDark = findViewById(R.id.rbDark);
         rbSystem = findViewById(R.id.rbSystem);
         llColorPalette = findViewById(R.id.llColorPalette);
+        spinnerAutoLock = findViewById(R.id.spinnerAutoLock);
+        btnExport = findViewById(R.id.btnExport);
+        btnImport = findViewById(R.id.btnImport);
 
         // Set initial switch state
         boolean fingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false);
@@ -83,6 +131,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         // Restore theme selections
         restoreThemeSettings();
+        setupAutoLockSpinner();
 
         // Fingerprint toggle listener
         switchFingerprint.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -143,6 +192,8 @@ public class SettingsActivity extends AppCompatActivity {
         buildColorPalette();
 
         btnChangeCode.setOnClickListener(v -> showChangeCodeDialog());
+        btnExport.setOnClickListener(v -> promptBackupPassword());
+        btnImport.setOnClickListener(v -> openDocumentLauncher.launch(new String[]{"text/plain"}));
         btnLockVault.setOnClickListener(v -> {
             VaultManager.clearGlobalKey();
             Intent intent = new Intent(this, MainActivity.class);
@@ -165,6 +216,30 @@ public class SettingsActivity extends AppCompatActivity {
         // Color palette restoration is handled in buildColorPalette()
     }
 
+    private void setupAutoLockSpinner() {
+        String[] options = {"Never", "1 minute", "5 minutes", "15 minutes", "30 minutes"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, options);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerAutoLock.setAdapter(adapter);
+
+        long currentTime = prefs.getLong(KEY_AUTO_LOCK, 0);
+        for (int i = 0; i < AUTO_LOCK_VALUES.length; i++) {
+            if (AUTO_LOCK_VALUES[i] == currentTime) {
+                spinnerAutoLock.setSelection(i);
+                break;
+            }
+        }
+
+        spinnerAutoLock.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                prefs.edit().putLong(KEY_AUTO_LOCK, AUTO_LOCK_VALUES[position]).apply();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
     private void buildColorPalette() {
         llColorPalette.removeAllViews();
         int currentPalette = prefs.getInt(KEY_COLOR_PALETTE, 0); // default teal
@@ -172,11 +247,11 @@ public class SettingsActivity extends AppCompatActivity {
         for (int i = 0; i < PALETTE_COLORS.length; i++) {
             final int index = i;
             View colorCircle = new View(this);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    (int) getResources().getDimension(androidx.appcompat.R.dimen.abc_action_bar_default_height_material) / 2,
-                    (int) getResources().getDimension(androidx.appcompat.R.dimen.abc_action_bar_default_height_material) / 2
-            );
-            params.setMargins(12, 0, 12, 0);
+            int size = (int) getResources().getDimension(androidx.appcompat.R.dimen.abc_action_bar_default_height_material) / 2;
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+            params.width = size;
+            params.height = size;
+            params.setMargins(16, 16, 16, 16);
             colorCircle.setLayoutParams(params);
             colorCircle.setBackgroundColor(PALETTE_COLORS[i]);
             if (i == currentPalette) {
@@ -198,6 +273,139 @@ public class SettingsActivity extends AppCompatActivity {
             });
             llColorPalette.addView(colorCircle);
         }
+    }
+
+    // ---------- Backup & Restore Logic ----------
+
+    private String tempBackupPassword;
+    private void promptBackupPassword() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Set Backup Password");
+        final android.widget.EditText input = new android.widget.EditText(this);
+        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        builder.setView(input);
+        builder.setPositiveButton("Continue", (dialog, which) -> {
+            tempBackupPassword = input.getText().toString();
+            createDocumentLauncher.launch("secure_pass_backup.txt");
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+
+    private void onBackupFileCreated(Uri uri) {
+        if (uri == null || tempBackupPassword == null) return;
+        try {
+            // 1. Prepare data
+            List<VaultItem> entries = vaultManager.loadEntries();
+            String json = new Gson().toJson(entries);
+
+            // 2. Encrypt
+            byte[] salt = new byte[16];
+            new SecureRandom().nextBytes(salt);
+            SecretKey key = CryptoManager.deriveKey(tempBackupPassword, salt);
+            
+            // CryptoManager.encrypt returns Base64(IV + Ciphertext)
+            String encryptedIVData = CryptoManager.encrypt(json, key);
+            byte[] ivData = Base64.getDecoder().decode(encryptedIVData);
+
+            // 3. Combine: salt + IV + ciphertext
+            ByteBuffer buffer = ByteBuffer.allocate(salt.length + ivData.length);
+            buffer.put(salt);
+            buffer.put(ivData);
+            
+            String finalBase64 = Base64.getEncoder().encodeToString(buffer.array());
+
+            // 4. Write to file
+            try (OutputStream os = getContentResolver().openOutputStream(uri)) {
+                if (os != null) {
+                    os.write(finalBase64.getBytes(StandardCharsets.UTF_8));
+                }
+            }
+            Toast.makeText(this, "Backup exported successfully", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        } finally {
+            tempBackupPassword = null;
+        }
+    }
+
+    private void onBackupFileOpened(Uri uri) {
+        if (uri == null) return;
+        getPassword(password -> handleImport(uri, password));
+    }
+
+    private interface PasswordCallback { void onPassword(String password); }
+    private void getPassword(PasswordCallback callback) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Enter Backup Password");
+        final android.widget.EditText input = new android.widget.EditText(this);
+        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        builder.setView(input);
+        builder.setPositiveButton("OK", (dialog, which) -> callback.onPassword(input.getText().toString()));
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+
+    // Refined Import flow
+    private void handleImport(Uri uri, String password) {
+        try {
+            // 1. Read file
+            byte[] fileBytes;
+            try (InputStream is = getContentResolver().openInputStream(uri)) {
+                if (is == null) throw new Exception("Could not open file");
+                byte[] encodedBytes = new byte[is.available()];
+                int read = is.read(encodedBytes);
+                if (read == -1) throw new Exception("File is empty");
+                fileBytes = Base64.getDecoder().decode(new String(encodedBytes, StandardCharsets.UTF_8));
+            }
+
+            // 2. Extract salt and data
+            ByteBuffer buffer = ByteBuffer.wrap(fileBytes);
+            byte[] salt = new byte[16];
+            buffer.get(salt);
+            byte[] ivData = new byte[buffer.remaining()];
+            buffer.get(ivData);
+
+            // 3. Decrypt
+            SecretKey key = CryptoManager.deriveKey(password, salt);
+            String encryptedIVData = Base64.getEncoder().encodeToString(ivData);
+            String json = CryptoManager.decrypt(encryptedIVData, key);
+
+            // 4. Parse
+            List<VaultItem> importedEntries = new Gson().fromJson(json, new TypeToken<List<VaultItem>>(){}.getType());
+
+            // 5. Merge or Replace
+            showMergeDialog(importedEntries);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Import failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void showMergeDialog(List<VaultItem> importedEntries) {
+        new AlertDialog.Builder(this)
+                .setTitle("Restore Backup")
+                .setMessage("Found " + importedEntries.size() + " entries. Do you want to merge them with current entries or replace everything?")
+                .setPositiveButton("Merge", (dialog, which) -> {
+                    try {
+                        vaultManager.mergeEntries(importedEntries);
+                        Toast.makeText(this, "Merged successfully", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Merge failed", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNeutralButton("Replace", (dialog, which) -> {
+                    try {
+                        vaultManager.saveEntries(importedEntries);
+                        Toast.makeText(this, "Replaced successfully", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Replace failed", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     // ============ (existing methods unchanged below) ============

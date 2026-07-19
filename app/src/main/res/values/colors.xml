@@ -23,4 +23,28 @@
 
     <color name="palette_red_primary">#D32F2F</color>
     <color name="palette_red_variant">#C62828</color>
+
+    <color name="palette_orange_primary">#F57C00</color>
+    <color name="palette_orange_variant">#E65100</color>
+
+    <color name="palette_indigo_primary">#3F51B5</color>
+    <color name="palette_indigo_variant">#303F9F</color>
+
+    <color name="palette_pink_primary">#D81B60</color>
+    <color name="palette_pink_variant">#AD1457</color>
+
+    <color name="palette_onyx_primary">#212121</color>
+    <color name="palette_onyx_variant">#000000</color>
+
+    <color name="palette_yellow_primary">#FBC02D</color>
+    <color name="palette_yellow_variant">#F9A825</color>
+
+    <color name="palette_cyan_primary">#00BCD4</color>
+    <color name="palette_cyan_variant">#0097A7</color>
+
+    <color name="palette_brown_primary">#795548</color>
+    <color name="palette_brown_variant">#5D4037</color>
+
+    <color name="palette_grey_primary">#9E9E9E</color>
+    <color name="palette_grey_variant">#616161</color>
 </resources>

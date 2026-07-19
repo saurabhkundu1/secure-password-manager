@@ -76,6 +76,13 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize dot display
         updateDotDisplay();
+
+        // Security check: Log vault file info
+        java.io.File vaultFile = new java.io.File(getFilesDir(), "vault.txt");
+        if (vaultFile.exists()) {
+            android.util.Log.d("SecurePass", "Vault file detected: " + vaultFile.getAbsolutePath());
+            android.util.Log.d("SecurePass", "File size: " + vaultFile.length() + " bytes");
+        }
     }
 
     private boolean isVaultSetup() {
@@ -124,11 +131,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateDotDisplay() {
         pinDotsContainer.removeAllViews();
+        
+        android.util.TypedValue typedValue = new android.util.TypedValue();
+        getTheme().resolveAttribute(androidx.appcompat.R.attr.colorPrimary, typedValue, true);
+        int colorPrimary = typedValue.data;
+
         for (int i = 0; i < 6; i++) {
             TextView dot = new TextView(this);
             dot.setText(i < enteredCode.length() ? "●" : "○");
             dot.setTextSize(24);
-            dot.setTextColor(getResources().getColor(R.color.teal_700));
+            dot.setTextColor(colorPrimary);
             dot.setPadding(12, 0, 12, 0);
             pinDotsContainer.addView(dot);
         }

@@ -4,15 +4,33 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#FAFAFA">
+    android:background="?android:attr/colorBackground">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/teal_700"
-        app:titleTextColor="@color/white"
+        android:background="?attr/colorPrimary"
+        app:titleTextColor="?attr/colorOnPrimary"
         app:title="Secure Pass" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilSearch"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        android:hint="Search passwords..."
+        app:startIconDrawable="@android:drawable/ic_menu_search"
+        app:startIconTint="?attr/colorPrimary"
+        app:endIconMode="clear_text">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etSearch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout
         android:id="@+id/layoutEmpty"
@@ -41,8 +59,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Add Your First Password"
-            android:textColor="@color/white"
-            android:backgroundTint="@color/teal_700"
+            android:textColor="?attr/colorOnPrimary"
+            android:backgroundTint="?attr/colorPrimary"
             android:layout_marginTop="24dp"
             style="@style/Widget.MaterialComponents.Button"/>
     </LinearLayout>
@@ -63,6 +81,6 @@
         android:layout_margin="16dp"
         android:src="@android:drawable/ic_input_add"
         android:contentDescription="Add password"
-        app:tint="@color/white"
-        app:backgroundTint="@color/teal_700"/>
+        app:tint="?attr/colorOnPrimary"
+        app:backgroundTint="?attr/colorPrimary"/>
 </LinearLayout>

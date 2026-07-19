@@ -47,6 +47,14 @@ public class ThemeHelper {
             case 2: return R.style.Theme_SecurePass_Green;
             case 3: return R.style.Theme_SecurePass_Purple;
             case 4: return R.style.Theme_SecurePass_Red;
+            case 5: return R.style.Theme_SecurePass_Orange;
+            case 6: return R.style.Theme_SecurePass_Indigo;
+            case 7: return R.style.Theme_SecurePass_Pink;
+            case 8: return R.style.Theme_SecurePass_Onyx;
+            case 9: return R.style.Theme_SecurePass_Yellow;
+            case 10: return R.style.Theme_SecurePass_Cyan;
+            case 11: return R.style.Theme_SecurePass_Brown;
+            case 12: return R.style.Theme_SecurePass_Grey;
             default: return R.style.Theme_SecurePass_Teal;
         }
     }

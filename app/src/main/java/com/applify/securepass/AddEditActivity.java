@@ -1,11 +1,16 @@
 package com.applify.securepass;
 
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,10 +18,12 @@ import com.applify.securepass.data.VaultItem;
 import com.applify.securepass.data.VaultManager;
 import com.google.android.material.textfield.TextInputEditText;
 
-public class AddEditActivity extends AppCompatActivity {
+public class AddEditActivity extends BaseLockActivity {
 
     private static final String TAG = "AddEditActivity";
     private TextInputEditText etWebsite, etUsername, etPassword, etNotes;
+    private ProgressBar progressStrength;
+    private TextView tvStrengthText;
     private VaultManager vaultManager;
     private String userCode;
     private String editingItemId = null;
@@ -34,6 +41,8 @@ public class AddEditActivity extends AppCompatActivity {
         etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id.etPassword);
         etNotes = findViewById(R.id.etNotes);
+        progressStrength = findViewById(R.id.progressStrength);
+        tvStrengthText = findViewById(R.id.tvStrengthText);
         Button btnGenerate = findViewById(R.id.btnGeneratePassword);
         Button btnSave = findViewById(R.id.btnSave);
 
@@ -41,6 +50,22 @@ public class AddEditActivity extends AppCompatActivity {
             editingItemId = getIntent().getStringExtra("ITEM_ID");
             loadExistingItem(editingItemId);
         }
+
+        // Initial strength check
+        updatePasswordStrength(etPassword.getText() != null ? etPassword.getText().toString() : "");
+
+        etPassword.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                updatePasswordStrength(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
 
         btnGenerate.setOnClickListener(v -> showPasswordGeneratorDialog());
         btnSave.setOnClickListener(v -> saveEntry());
@@ -133,5 +158,41 @@ public class AddEditActivity extends AppCompatActivity {
         });
         builder.setNegativeButton("Cancel", null);
         builder.show();
+    }
+
+    private void updatePasswordStrength(String password) {
+        if (password == null || password.isEmpty()) {
+            progressStrength.setProgress(0);
+            tvStrengthText.setText("Weak");
+            tvStrengthText.setTextColor(0xFFD32F2F);
+            progressStrength.setProgressTintList(ColorStateList.valueOf(0xFFD32F2F));
+            return;
+        }
+
+        int score = 0;
+        // Length (max 40 pts)
+        score += Math.min(password.length() * 5, 40);
+
+        // Varieties (15 pts each)
+        if (password.matches(".*[A-Z].*")) score += 15;
+        if (password.matches(".*[a-z].*")) score += 15;
+        if (password.matches(".*[0-9].*")) score += 15;
+        if (password.matches(".*[^A-Za-z0-9].*")) score += 15;
+
+        progressStrength.setProgress(score);
+
+        if (score <= 40) {
+            tvStrengthText.setText("Weak");
+            tvStrengthText.setTextColor(0xFFD32F2F); // palette_red_primary
+            progressStrength.setProgressTintList(ColorStateList.valueOf(0xFFD32F2F));
+        } else if (score <= 70) {
+            tvStrengthText.setText("Fair");
+            tvStrengthText.setTextColor(0xFFF57C00); // palette_orange_primary
+            progressStrength.setProgressTintList(ColorStateList.valueOf(0xFFF57C00));
+        } else {
+            tvStrengthText.setText("Strong");
+            tvStrengthText.setTextColor(0xFF388E3C); // palette_green_primary
+            progressStrength.setProgressTintList(ColorStateList.valueOf(0xFF388E3C));
+        }
     }
 }

@@ -12,7 +12,7 @@ import java.util.List;
 import javax.crypto.SecretKey;
 
 public class VaultManager {
-    private static final String VAULT_FILE = "vault.enc";
+    private static final String VAULT_FILE = "vault.txt";
     private static final String SALT_FILE = "vault.salt";
     private File baseDir;
     private SecretKey currentKey;
@@ -119,6 +119,27 @@ public class VaultManager {
         String encrypted = CryptoManager.encrypt(json, key);
         File file = new File(baseDir, VAULT_FILE);
         writeFile(file, encrypted);
+    }
+
+    /**
+     * Merges a list of items into the existing vault.
+     * Skips items that already exist (same ID).
+     */
+    public void mergeEntries(List<VaultItem> newItems) throws Exception {
+        List<VaultItem> existing = loadEntries();
+        for (VaultItem newItem : newItems) {
+            boolean found = false;
+            for (VaultItem ex : existing) {
+                if (ex.id.equals(newItem.id)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                existing.add(newItem);
+            }
+        }
+        saveEntries(existing);
     }
 
     // ---------- Salt & File Helpers ----------

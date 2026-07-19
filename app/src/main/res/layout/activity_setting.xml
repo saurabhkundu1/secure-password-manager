@@ -92,6 +92,29 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"/>
 
+            <!-- Auto-Lock section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Auto-Lock Timer"
+                android:textSize="18sp"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <Spinner
+                android:id="@+id/spinnerAutoLock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/dividerVertical"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"/>
+
             <!-- Color palette section -->
             <TextView
                 android:layout_width="wrap_content"
@@ -102,15 +125,17 @@
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp"/>
 
-            <LinearLayout
+            <GridLayout
                 android:id="@+id/llColorPalette"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center">
+                android:columnCount="5"
+                android:useDefaultMargins="true"
+                android:alignmentMode="alignBounds"
+                android:layout_gravity="center_horizontal">
 
                 <!-- We'll add color circles programmatically -->
-            </LinearLayout>
+            </GridLayout>
 
             <View
                 android:layout_width="match_parent"
@@ -127,6 +152,30 @@
                 android:text="Change Master Code"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:textColor="?attr/colorPrimary"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnExport"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Export Backup"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:textColor="?attr/colorPrimary"/>
+
+                <Button
+                    android:id="@+id/btnImport"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Import Backup"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:textColor="?attr/colorPrimary"/>
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnLockVault"
