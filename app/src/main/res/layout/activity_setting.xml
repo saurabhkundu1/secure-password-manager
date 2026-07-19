@@ -4,62 +4,138 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#FAFAFA">
+    android:background="?android:attr/colorBackground">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/teal_700"
-        app:titleTextColor="@color/white"
+        android:background="?attr/colorPrimary"
+        app:titleTextColor="?attr/colorOnPrimary"
         app:title="Settings"
         app:navigationIcon="?attr/homeAsUpIndicator"
         app:navigationContentDescription="Back" />
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="wrap_content">
 
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switchFingerprint"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Fingerprint unlock"
-            android:textSize="16sp" />
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvLastCodeTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Last code entry: Never"
-            android:textSize="14sp"
-            android:textColor="#757575"/>
+            <!-- Fingerprint section -->
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchFingerprint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Fingerprint unlock"
+                android:textSize="16sp" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#E0E0E0"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"/>
+            <TextView
+                android:id="@+id/tvLastCodeTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Last code entry: Never"
+                android:textSize="14sp"
+                android:textColor="?android:attr/textColorSecondary"/>
 
-        <Button
-            android:id="@+id/btnChangeCode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Change Master Code"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:textColor="@color/teal_700"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/dividerVertical"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"/>
 
-        <Button
-            android:id="@+id/btnLockVault"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Lock Vault Now"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:textColor="#D32F2F"/>
+            <!-- Theme mode section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Theme Mode"
+                android:textSize="18sp"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
 
-    </LinearLayout>
+            <RadioGroup
+                android:id="@+id/rgThemeMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/rbLight"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Light" />
+
+                <RadioButton
+                    android:id="@+id/rbDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Dark" />
+
+                <RadioButton
+                    android:id="@+id/rbSystem"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="System default" />
+            </RadioGroup>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/dividerVertical"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Color palette section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Color Palette"
+                android:textSize="18sp"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <LinearLayout
+                android:id="@+id/llColorPalette"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <!-- We'll add color circles programmatically -->
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/dividerVertical"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Action buttons -->
+            <Button
+                android:id="@+id/btnChangeCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Change Master Code"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="?attr/colorPrimary"/>
+
+            <Button
+                android:id="@+id/btnLockVault"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lock Vault Now"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="#D32F2F"/>
+
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

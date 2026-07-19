@@ -1,0 +1,3 @@
+- [x] Fix variable shadowing in `MainActivity.java`
+- [x] Initialize `prefs` before theme application in `SettingsActivity.java`
+- [x] Build and verify the project

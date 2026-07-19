@@ -1,6 +1,7 @@
 package com.applify.securepass;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.applify.securepass.data.VaultItem;
 import com.applify.securepass.data.VaultManager;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,12 +36,16 @@ public class VaultActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vault);
 
         vaultManager = new VaultManager(this);
 
         // Bind views
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
         recyclerView = findViewById(R.id.recyclerViewVault);
         layoutEmpty = findViewById(R.id.layoutEmpty);
         FloatingActionButton fabAdd = findViewById(R.id.fabAdd);

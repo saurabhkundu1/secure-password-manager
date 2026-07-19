@@ -1,0 +1,5 @@
+- [x] Fix Settings button click in `VaultActivity`
+    - [x] Update `VaultActivity.java` to set the Action Bar
+    - [x] Update `activity_vault.xml` to remove duplicate menu inflation
+- [x] Verify build
+- [x] Create walkthrough

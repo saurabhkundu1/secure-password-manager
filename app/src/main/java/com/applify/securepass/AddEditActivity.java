@@ -1,6 +1,8 @@
 package com.applify.securepass;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -13,6 +15,7 @@ import com.google.android.material.textfield.TextInputEditText;
 
 public class AddEditActivity extends AppCompatActivity {
 
+    private static final String TAG = "AddEditActivity";
     private TextInputEditText etWebsite, etUsername, etPassword, etNotes;
     private VaultManager vaultManager;
     private String userCode;
@@ -20,6 +23,7 @@ public class AddEditActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_edit);
 
@@ -56,14 +60,16 @@ public class AddEditActivity extends AppCompatActivity {
                     break;
                 }
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading existing item", e);
+        }
     }
 
     private void saveEntry() {
-        String website = etWebsite.getText().toString().trim();
-        String username = etUsername.getText().toString().trim();
-        String password = etPassword.getText().toString();
-        String notes = etNotes.getText().toString().trim();
+        String website = etWebsite.getText() != null ? etWebsite.getText().toString().trim() : "";
+        String username = etUsername.getText() != null ? etUsername.getText().toString().trim() : "";
+        String password = etPassword.getText() != null ? etPassword.getText().toString() : "";
+        String notes = etNotes.getText() != null ? etNotes.getText().toString().trim() : "";
 
         if (website.isEmpty() || username.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Please fill all required fields", Toast.LENGTH_SHORT).show();
@@ -96,7 +102,7 @@ public class AddEditActivity extends AppCompatActivity {
             finish();
         } catch (Exception e) {
             Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            e.printStackTrace();
+            Log.e(TAG, "Error saving entry", e);
         }
     }
 
@@ -114,8 +120,12 @@ public class AddEditActivity extends AppCompatActivity {
 
         builder.setPositiveButton("Generate", (dialog, which) -> {
             int length;
-            try { length = Integer.parseInt(etLength.getText().toString()); }
-            catch (NumberFormatException e) { length = 16; }
+            try {
+                String lengthStr = etLength.getText() != null ? etLength.getText().toString() : "16";
+                length = Integer.parseInt(lengthStr);
+            } catch (NumberFormatException e) {
+                length = 16;
+            }
             String pwd = PasswordGenerator.generate(length,
                     cbUpper.isChecked(), cbLower.isChecked(),
                     cbDigits.isChecked(), cbSymbols.isChecked());

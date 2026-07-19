@@ -33,8 +33,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        prefs = getSharedPreferences("secure_pass_prefs", MODE_PRIVATE);
 
         vaultManager = new VaultManager(this);
 
@@ -57,8 +60,6 @@ public class MainActivity extends AppCompatActivity {
         btnDelete = findViewById(R.id.btnDelete);
         btnSubmit = findViewById(R.id.btnSubmit);
         btnBiometric = findViewById(R.id.btnBiometric);
-
-        prefs = getSharedPreferences("secure_pass_prefs", MODE_PRIVATE);
 
         // Set click listeners
         setNumberPadListeners();
