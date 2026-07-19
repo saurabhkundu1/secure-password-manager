@@ -144,6 +144,56 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"/>
 
+            <!-- Support & Feedback section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Support &amp; Feedback"
+                android:textSize="18sp"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <Button
+                android:id="@+id/btnGithub"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Visit GitHub Repository"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="?attr/colorPrimary"
+                app:icon="@android:drawable/ic_menu_info_details"
+                app:iconTint="?attr/colorPrimary"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Send feedback or report an issue:"
+                android:textSize="14sp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="4dp"/>
+
+            <Spinner
+                android:id="@+id/spinnerFeedback"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"/>
+
+            <Button
+                android:id="@+id/btnSendFeedback"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Send Feedback Email"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="?attr/colorPrimary"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/dividerVertical"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"/>
+
             <!-- Action buttons -->
             <Button
                 android:id="@+id/btnChangeCode"

@@ -45,9 +45,11 @@ import javax.crypto.SecretKey;
 
 public class SettingsActivity extends BaseLockActivity {
     private SwitchMaterial switchFingerprint;
-    private Button btnChangeCode, btnLockVault, btnExport, btnImport;
+    private Button btnChangeCode, btnLockVault, btnExport, btnImport, btnGithub, btnSendFeedback;
     private SharedPreferences prefs;
     private VaultManager vaultManager;
+
+    private Spinner spinnerAutoLock, spinnerFeedback;
 
     private final ActivityResultLauncher<String> createDocumentLauncher =
             registerForActivityResult(new ActivityResultContracts.CreateDocument("text/plain"), this::onBackupFileCreated);
@@ -72,7 +74,6 @@ public class SettingsActivity extends BaseLockActivity {
     private RadioGroup rgThemeMode;
     private RadioButton rbLight, rbDark, rbSystem;
     private GridLayout llColorPalette;
-    private Spinner spinnerAutoLock;
 
     // Color palette definitions (hex)
     private static final int[] PALETTE_COLORS = {
@@ -117,6 +118,9 @@ public class SettingsActivity extends BaseLockActivity {
         spinnerAutoLock = findViewById(R.id.spinnerAutoLock);
         btnExport = findViewById(R.id.btnExport);
         btnImport = findViewById(R.id.btnImport);
+        btnGithub = findViewById(R.id.btnGithub);
+        btnSendFeedback = findViewById(R.id.btnSendFeedback);
+        spinnerFeedback = findViewById(R.id.spinnerFeedback);
 
         // Set initial switch state
         boolean fingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false);
@@ -132,6 +136,7 @@ public class SettingsActivity extends BaseLockActivity {
         // Restore theme selections
         restoreThemeSettings();
         setupAutoLockSpinner();
+        setupFeedbackSpinner();
 
         // Fingerprint toggle listener
         switchFingerprint.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -194,6 +199,25 @@ public class SettingsActivity extends BaseLockActivity {
         btnChangeCode.setOnClickListener(v -> showChangeCodeDialog());
         btnExport.setOnClickListener(v -> promptBackupPassword());
         btnImport.setOnClickListener(v -> openDocumentLauncher.launch(new String[]{"text/plain"}));
+        
+        btnGithub.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/saurabhkundu1/secure-password-manager"));
+            startActivity(intent);
+        });
+
+        btnSendFeedback.setOnClickListener(v -> {
+            String feedbackType = spinnerFeedback.getSelectedItem().toString();
+            Intent intent = new Intent(Intent.ACTION_SENDTO);
+            intent.setData(Uri.parse("mailto:"));
+            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"saurabhkundu1@gmail.com"});
+            intent.putExtra(Intent.EXTRA_SUBJECT, "Secure Pass Feedback: " + feedbackType);
+            try {
+                startActivity(Intent.createChooser(intent, "Send feedback via..."));
+            } catch (android.content.ActivityNotFoundException ex) {
+                Toast.makeText(this, "No email app installed.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         btnLockVault.setOnClickListener(v -> {
             VaultManager.clearGlobalKey();
             Intent intent = new Intent(this, MainActivity.class);
@@ -238,6 +262,13 @@ public class SettingsActivity extends BaseLockActivity {
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
         });
+    }
+
+    private void setupFeedbackSpinner() {
+        String[] options = {"General Feedback", "Report an Issue", "Feature Suggestion", "Security Concern"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, options);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerFeedback.setAdapter(adapter);
     }
 
     private void buildColorPalette() {

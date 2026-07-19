@@ -2,6 +2,13 @@
 
 All notable changes to the **Secure Pass** project will be documented in this file.
 
+## [1.0.1] - 2026-07-19
+
+### Added ✨
+- **Support & Feedback Section**: New area in Settings to help users connect.
+- **GitHub Integration**: Direct link to the official repository.
+- **Feedback Dropdown**: Categorized email feedback (Issues, Suggestions, Security) for better communication.
+
 ## [1.0.0] - 2026-07-19
 
 ### Initial Release 🚀
