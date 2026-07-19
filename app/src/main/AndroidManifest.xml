@@ -24,6 +24,7 @@
 
         <activity android:name=".VaultActivity" />
         <activity android:name=".AddEditActivity" />
+        <activity android:name=".SettingsActivity" />
 
     </application>
 </manifest>

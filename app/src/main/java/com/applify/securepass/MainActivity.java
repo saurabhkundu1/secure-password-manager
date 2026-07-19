@@ -6,11 +6,14 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.GridLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import com.applify.securepass.data.VaultManager;
 import com.google.android.material.snackbar.Snackbar;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.widget.ImageButton;
+import android.widget.Toast;
+import javax.crypto.spec.SecretKeySpec;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -21,11 +24,12 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvInstruction;
     private TextView tvError;
     private LinearLayout pinDotsContainer;
-    private ImageView ivLockIcon;
 
     // Number pad buttons
     private Button btn0, btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9;
     private Button btnDelete, btnSubmit;
+    private ImageButton btnBiometric;
+    private SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +42,6 @@ public class MainActivity extends AppCompatActivity {
         tvInstruction = findViewById(R.id.tvInstruction);
         tvError = findViewById(R.id.tvError);
         pinDotsContainer = findViewById(R.id.pinDotsContainer);
-        ivLockIcon = findViewById(R.id.ivLockIcon);
 
         // Bind number buttons
         btn0 = findViewById(R.id.btn0);
@@ -53,6 +56,9 @@ public class MainActivity extends AppCompatActivity {
         btn9 = findViewById(R.id.btn9);
         btnDelete = findViewById(R.id.btnDelete);
         btnSubmit = findViewById(R.id.btnSubmit);
+        btnBiometric = findViewById(R.id.btnBiometric);
+
+        prefs = getSharedPreferences("secure_pass_prefs", MODE_PRIVATE);
 
         // Set click listeners
         setNumberPadListeners();
@@ -61,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         if (isVaultSetup()) {
             isSetupMode = false;
             tvInstruction.setText("Enter your 6-digit code");
+            checkBiometricStatus();
         } else {
             isSetupMode = true;
             tvInstruction.setText("Create a 6-digit code");
@@ -169,5 +176,36 @@ public class MainActivity extends AppCompatActivity {
             enteredCode = "";
             updateDotDisplay();
         }
+    }
+
+    private void checkBiometricStatus() {
+        boolean biometricEnabled = prefs.getBoolean("fingerprint_enabled", false);
+        String encryptedKey = prefs.getString("encrypted_vault_key", null);
+        long lastCodeTime = prefs.getLong("last_code_time", 0);
+        boolean isExpired = (System.currentTimeMillis() - lastCodeTime) > (24 * 60 * 60 * 1000L);
+
+        if (biometricEnabled && encryptedKey != null && !isExpired) {
+            btnBiometric.setVisibility(View.VISIBLE);
+            btnBiometric.setOnClickListener(v -> triggerBiometricUnlock(encryptedKey));
+            // Automatically trigger it on start
+            triggerBiometricUnlock(encryptedKey);
+        }
+    }
+
+    private void triggerBiometricUnlock(String encryptedKey) {
+        BiometricHelper.decryptKeyWithBiometric(this, encryptedKey, new BiometricHelper.BiometricAuthenticationCallback() {
+            @Override
+            public void onSuccess(byte[] decryptedKey) {
+                vaultManager.unlockWithKey(new SecretKeySpec(decryptedKey, "AES"));
+                Intent intent = new Intent(MainActivity.this, VaultActivity.class);
+                startActivity(intent);
+                finish();
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(MainActivity.this, "Biometric failed: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

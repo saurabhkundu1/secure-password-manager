@@ -12,7 +12,8 @@
         android:layout_height="?attr/actionBarSize"
         android:background="@color/teal_700"
         app:titleTextColor="@color/white"
-        app:title="Secure Pass" />
+        app:title="Secure Pass"
+        app:menu="@menu/vault_menu" />
 
     <LinearLayout
         android:id="@+id/layoutEmpty"

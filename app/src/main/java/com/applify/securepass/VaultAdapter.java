@@ -1,12 +1,16 @@
 package com.applify.securepass;
 
+import android.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.applify.securepass.data.VaultItem;
+
 import java.util.List;
 
 public class VaultAdapter extends RecyclerView.Adapter<VaultAdapter.ViewHolder> {
@@ -38,25 +42,29 @@ public class VaultAdapter extends RecyclerView.Adapter<VaultAdapter.ViewHolder> 
         holder.text1.setText(item.website);
         holder.text2.setText(item.username);
 
-        // Tap: copy password to clipboard (auto‑clears)
+        // Item click: show action dialog
         holder.itemView.setOnClickListener(v -> {
-            ClipboardUtil.copyAndClear(v.getContext(), item.website, item.password, 30);
-        });
-
-        // Long‑press: delete entry (confirmation dialog)
-        holder.itemView.setOnLongClickListener(v -> {
-            new android.app.AlertDialog.Builder(v.getContext())
-                    .setTitle("Delete Entry")
-                    .setMessage("Delete " + item.website + "?")
-                    .setPositiveButton("Delete", (dialog, which) -> {
-                        if (deleteListener != null) deleteListener.onDelete(item);
+            new AlertDialog.Builder(v.getContext())
+                    .setTitle(item.website)
+                    .setItems(new CharSequence[]{"Copy Password", "Edit", "Delete"}, (dialog, which) -> {
+                        switch (which) {
+                            case 0: // Copy
+                                ClipboardUtil.copyAndClear(v.getContext(), item.website, item.password, 30);
+                                break;
+                            case 1: // Edit
+                                if (listener != null) listener.onItemClick(item);
+                                break;
+                            case 2: // Delete
+                                if (deleteListener != null) deleteListener.onDelete(item);
+                                break;
+                        }
                     })
-                    .setNegativeButton("Cancel", null)
                     .show();
-            return true;
         });
-    }
 
+        // Remove long‑press listener – now delete is in the dialog
+        holder.itemView.setOnLongClickListener(null);
+    }
     @Override public int getItemCount() { return items.size(); }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

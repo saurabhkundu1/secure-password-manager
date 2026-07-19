@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -84,6 +85,18 @@
         <Button android:id="@+id/btnSubmit" style="@style/NumberPadButton" android:text="✓"
             android:textColor="#00897B"/>
     </GridLayout>
+
+    <ImageButton
+        android:id="@+id/btnBiometric"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginTop="24dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_dialog_info"
+        android:contentDescription="Biometric Unlock"
+        android:scaleType="fitCenter"
+        app:tint="@color/teal_700"
+        android:visibility="gone"/>
 
     <!-- Error message (hidden by default) -->
     <TextView

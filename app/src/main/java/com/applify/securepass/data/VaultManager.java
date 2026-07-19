@@ -77,6 +77,29 @@ public class VaultManager {
         setGlobalKey(currentKey);   // share the key
     }
 
+    /**
+     * Changes the master code. Requires the old code to unlock, then re-encrypts
+     * the vault with the new code.
+     */
+    public void changeMasterCode(String oldCode, String newCode) throws Exception {
+        // Unlock with old code (this sets currentKey and globalKey)
+        unlock(oldCode);
+
+        // Load existing entries using old key
+        List<VaultItem> entries = loadEntries();
+
+        // Derive a new key with the new code (reusing the same salt)
+        byte[] salt = loadSalt();
+        SecretKey newKey = CryptoManager.deriveKey(newCode, salt);
+
+        // Replace the key
+        currentKey = newKey;
+        setGlobalKey(newKey);
+
+        // Re-save entries with the new key
+        saveEntries(entries);
+    }
+
     // ---------- Vault Operations ----------
     public List<VaultItem> loadEntries() throws Exception {
         SecretKey key = getCurrentKey();
