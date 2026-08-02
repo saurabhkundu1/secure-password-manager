@@ -2,6 +2,11 @@
 
 All notable changes to the **Secure Pass** project will be documented in this file.
 
+## [1.0.2] - 2026-08-02
+
+### Changed ⚙️
+- **Build System**: Updated Android Gradle Plugin (AGP) to 9.3.1 for improved build stability.
+
 ## [1.0.1] - 2026-07-19
 
 ### Added ✨
