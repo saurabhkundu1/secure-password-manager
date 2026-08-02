@@ -2,6 +2,17 @@
 
 All notable changes to the **Secure Pass** project will be documented in this file.
 
+## [1.1.0] - 2026-08-02
+
+### Added ✨
+- **Offline Update Checker**: Quick access to download the latest version via GitHub Releases without needing app internet permissions.
+- **Private Feedback System**: Direct link to submit issues and suggestions on GitHub, keeping developer email hidden and out of local mail history.
+
+### Improved 🎨
+- **Minimalist UI Refresh**: Redesigned the app icon to a sleek, modern lock for a more professional visual identity.
+- **Support Cleanup**: Streamlined the Settings screen by replacing complex dropdowns with clean, browser-based support links.
+- **Contact Update**: Set official support email to `kundusaurabh8@gmail.com` for developer communications.
+
 ## [1.0.2] - 2026-08-02
 
 ### Changed ⚙️
