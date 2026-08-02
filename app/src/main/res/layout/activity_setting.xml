@@ -165,13 +165,23 @@
                 app:iconTint="?attr/colorPrimary"/>
 
             <Button
-                android:id="@+id/btnContactDeveloper"
+                android:id="@+id/btnCheckUpdates"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Contact Support &amp; Feedback"
+                android:text="Check for Updates"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:textColor="?attr/colorPrimary"
-                app:icon="@android:drawable/ic_dialog_email"
+                app:icon="@android:drawable/ic_popup_sync"
+                app:iconTint="?attr/colorPrimary"/>
+
+            <Button
+                android:id="@+id/btnSubmitFeedback"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Submit Feedback &amp; Issues"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="?attr/colorPrimary"
+                app:icon="@android:drawable/ic_menu_help"
                 app:iconTint="?attr/colorPrimary"/>
 
             <View

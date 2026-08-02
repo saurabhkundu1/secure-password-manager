@@ -45,7 +45,7 @@ import javax.crypto.SecretKey;
 
 public class SettingsActivity extends BaseLockActivity {
     private SwitchMaterial switchFingerprint;
-    private Button btnChangeCode, btnLockVault, btnExport, btnImport, btnGithub, btnContactDeveloper;
+    private Button btnChangeCode, btnLockVault, btnExport, btnImport, btnGithub, btnCheckUpdates, btnSubmitFeedback;
     private SharedPreferences prefs;
     private VaultManager vaultManager;
 
@@ -119,7 +119,8 @@ public class SettingsActivity extends BaseLockActivity {
         btnExport = findViewById(R.id.btnExport);
         btnImport = findViewById(R.id.btnImport);
         btnGithub = findViewById(R.id.btnGithub);
-        btnContactDeveloper = findViewById(R.id.btnContactDeveloper);
+        btnCheckUpdates = findViewById(R.id.btnCheckUpdates);
+        btnSubmitFeedback = findViewById(R.id.btnSubmitFeedback);
 
         // Set initial switch state
         boolean fingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false);
@@ -203,16 +204,15 @@ public class SettingsActivity extends BaseLockActivity {
             startActivity(intent);
         });
 
-        btnContactDeveloper.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_SENDTO);
-            intent.setData(Uri.parse("mailto:"));
-            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"kundusaurabh8@gmail.com"});
-            intent.putExtra(Intent.EXTRA_SUBJECT, "Secure Pass: Support & Feedback");
-            try {
-                startActivity(Intent.createChooser(intent, "Contact Developer via..."));
-            } catch (android.content.ActivityNotFoundException ex) {
-                Toast.makeText(this, "No email app installed.", Toast.LENGTH_SHORT).show();
-            }
+        btnCheckUpdates.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/saurabhkundu1/secure-password-manager/releases/latest"));
+            startActivity(intent);
+        });
+
+        btnSubmitFeedback.setOnClickListener(v -> {
+            // Replace the URL below with your actual Google Form or website contact form link
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/saurabhkundu1/secure-password-manager/issues"));
+            startActivity(intent);
         });
 
         btnLockVault.setOnClickListener(v -> {
