@@ -1,0 +1,42 @@
+name: Build F-Droid Repo
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download APK from latest release
+        run: |
+          ASSET_URL=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | grep "browser_download_url.*apk" | cut -d '"' -f 4)
+          if [ -z "$ASSET_URL" ]; then echo "No APK asset found"; exit 1; fi
+          wget "$ASSET_URL" -O app-release.apk
+
+      - name: Install fdroidserver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fdroidserver
+
+      - name: Build F-Droid repo
+        run: |
+          rm -rf fdroid-repo
+          mkdir fdroid-repo
+          cd fdroid-repo
+          fdroid init --repo-url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/fdroid-repo/repo
+          cp ../app-release.apk repo/
+          fdroid update
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./fdroid-repo
+          publish_branch: gh-pages
+          keep_files: false
