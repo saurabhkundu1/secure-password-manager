@@ -1,6 +1,5 @@
 package com.applify.securepass;
 
-import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.text.Editable;
@@ -13,10 +12,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import com.applify.securepass.data.VaultItem;
 import com.applify.securepass.data.VaultManager;
 import com.google.android.material.textfield.TextInputEditText;
+import java.util.Objects;
 
 public class AddEditActivity extends BaseLockActivity {
 
@@ -77,7 +76,7 @@ public class AddEditActivity extends BaseLockActivity {
                 vaultManager.unlock(userCode);
             }
             for (VaultItem item : vaultManager.loadEntries()) {
-                if (item.id.equals(itemId)) {
+                if (java.util.Objects.equals(item.id, itemId)) {
                     etWebsite.setText(item.website);
                     etUsername.setText(item.username);
                     etPassword.setText(item.password);
@@ -109,7 +108,7 @@ public class AddEditActivity extends BaseLockActivity {
 
             if (editingItemId != null) {
                 for (VaultItem item : entries) {
-                    if (item.id.equals(editingItemId)) {
+                    if (java.util.Objects.equals(item.id, editingItemId)) {
                         item.website = website;
                         item.username = username;
                         item.password = password;

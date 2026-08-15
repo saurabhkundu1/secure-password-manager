@@ -1,10 +1,10 @@
 package com.applify.securepass;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,7 +14,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,19 +24,20 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import javax.crypto.SecretKey;
 
 public class VaultActivity extends BaseLockActivity {
 
+    private static final String TAG = "VaultActivity";
     private VaultManager vaultManager;
     private RecyclerView recyclerView;
     private LinearLayout layoutEmpty;
     private TextInputEditText etSearch;
     private VaultAdapter adapter;
-    private List<VaultItem> entries = new ArrayList<>();
-    private List<VaultItem> allEntries = new ArrayList<>();
+    private final List<VaultItem> entries = new ArrayList<>();
+    private final List<VaultItem> allEntries = new ArrayList<>();
     private String userCode;   // may be null if unlocked via biometric
     private Button btnAddFirst;
 
@@ -76,10 +76,7 @@ public class VaultActivity extends BaseLockActivity {
                     intent.putExtra("ITEM_ID", item.id);
                     startActivity(intent);
                 },
-                item -> {
-                    // Delete entry
-                    deleteItem(item);
-                },
+                this::deleteItem,
                 item -> {
                     // Toggle Favorite
                     item.isFavorite = !item.isFavorite;
@@ -148,7 +145,7 @@ public class VaultActivity extends BaseLockActivity {
             filterEntries(etSearch.getText() != null ? etSearch.getText().toString() : "");
             toggleEmptyState();
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error loading entries", e);
         }
     }
 
@@ -170,7 +167,7 @@ public class VaultActivity extends BaseLockActivity {
     }
 
     private void sortEntries() {
-        Collections.sort(entries, (a, b) -> {
+        entries.sort((a, b) -> {
             if (a.isFavorite != b.isFavorite) {
                 return a.isFavorite ? -1 : 1;
             }
@@ -186,7 +183,7 @@ public class VaultActivity extends BaseLockActivity {
             vaultManager.saveEntries(allEntries);
             loadEntries();
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Failed to save changes", e);
             Toast.makeText(this, "Failed to save changes", Toast.LENGTH_SHORT).show();
         }
     }
@@ -196,11 +193,11 @@ public class VaultActivity extends BaseLockActivity {
             if (!vaultManager.isUnlocked() && userCode != null) {
                 vaultManager.unlock(userCode);
             }
-            allEntries.removeIf(i -> i.id.equals(item.id));
+            allEntries.removeIf(i -> java.util.Objects.equals(i.id, item.id));
             vaultManager.saveEntries(allEntries);
             loadEntries();
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Delete failed", e);
             Toast.makeText(this, "Delete failed", Toast.LENGTH_SHORT).show();
         }
     }
@@ -231,17 +228,13 @@ public class VaultActivity extends BaseLockActivity {
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                int position = viewHolder.getAdapterPosition();
+                int position = viewHolder.getBindingAdapterPosition();
                 VaultItem item = entries.get(position);
                 new AlertDialog.Builder(VaultActivity.this)
                         .setTitle("Delete")
                         .setMessage("Delete " + item.website + "?")
-                        .setPositiveButton("Delete", (dialog, which) -> {
-                            deleteItem(item);
-                        })
-                        .setNegativeButton("Cancel", (dialog, which) -> {
-                            adapter.notifyItemChanged(position); // cancel swipe
-                        })
+                        .setPositiveButton("Delete", (dialog, which) -> deleteItem(item))
+                        .setNegativeButton("Cancel", (dialog, which) -> adapter.notifyItemChanged(position))
                         .show();
             }
         };

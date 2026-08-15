@@ -8,6 +8,7 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import javax.crypto.SecretKey;
 
@@ -145,20 +146,22 @@ public class VaultManager {
     // ---------- Salt & File Helpers ----------
     private void saveSalt(byte[] salt) throws IOException {
         File file = new File(baseDir, SALT_FILE);
-        writeFile(file, java.util.Base64.getEncoder().encodeToString(salt));
+        writeFile(file, Base64.getEncoder().encodeToString(salt));
     }
 
     private byte[] loadSalt() throws IOException {
         File file = new File(baseDir, SALT_FILE);
         String base64 = readFile(file);
-        return java.util.Base64.getDecoder().decode(base64);
+        return Base64.getDecoder().decode(base64);
     }
 
     private String readFile(File file) throws IOException {
         StringBuilder sb = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
-            while ((line = br.readLine()) != null) sb.append(line);
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
         }
         return sb.toString();
     }
