@@ -1,0 +1,13 @@
+Secure Pass is an offline, high-security encrypted password manager for Android. Store your credentials safely in a local, encrypted vault using AES-256-GCM, unlocked via a 6-digit PIN or Biometrics.
+
+Features:
+- Total Privacy: 100% offline. No internet permissions required.
+- Military-Grade Encryption: AES-256-GCM encryption with keys derived via PBKDF2.
+- Secure Access: Mandatory 6-digit master code.
+- Biometric Integration: Fingerprint support for convenience.
+- Personalized UI: 9 dynamic color palettes with full support for Light and Dark modes.
+- Password Generator: Create strong, customizable passwords.
+- Secure Notes: Store additional details for each account.
+- Encrypted Backups: Export and import your vault as encrypted text files.
+
+Your data never leaves your device. No cloud, no trackers, just your passwords.

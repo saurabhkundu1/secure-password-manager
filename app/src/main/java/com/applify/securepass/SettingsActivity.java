@@ -7,8 +7,8 @@ import android.os.Bundle;
 import android.text.format.DateUtils;
 import android.view.View;
 import android.widget.Button;
+import android.util.Log;
 import android.widget.GridLayout;
-import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
@@ -17,12 +17,10 @@ import android.widget.Toast;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.net.Uri;
-import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
 import com.applify.securepass.crypto.CryptoManager;
@@ -40,10 +38,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 
 import javax.crypto.SecretKey;
 
 public class SettingsActivity extends BaseLockActivity {
+    private static final String TAG = "SettingsActivity";
     private SwitchMaterial switchFingerprint;
     private Button btnChangeCode, btnLockVault, btnExport, btnImport, btnGithub, btnCheckUpdates, btnSubmitFeedback;
     private SharedPreferences prefs;
@@ -161,7 +161,7 @@ public class SettingsActivity extends BaseLockActivity {
                                 .apply();
                         Toast.makeText(this, "Fingerprint enabled", Toast.LENGTH_SHORT).show();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Log.e(TAG, "Fingerprint setup failed", e);
                         Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
                         switchFingerprint.setChecked(false);
                     }
@@ -205,6 +205,8 @@ public class SettingsActivity extends BaseLockActivity {
         });
 
         btnCheckUpdates.setOnClickListener(v -> {
+            // Note: This is an offline-friendly link to the releases page. 
+            // It does not perform any background updates, complying with F-Droid policies.
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/saurabhkundu1/secure-password-manager/releases/latest"));
             startActivity(intent);
         });
@@ -245,7 +247,7 @@ public class SettingsActivity extends BaseLockActivity {
 
         long currentTime = prefs.getLong(KEY_AUTO_LOCK, 0);
         for (int i = 0; i < AUTO_LOCK_VALUES.length; i++) {
-            if (AUTO_LOCK_VALUES[i] == currentTime) {
+            if (java.util.Objects.equals(AUTO_LOCK_VALUES[i], currentTime)) {
                 spinnerAutoLock.setSelection(i);
                 break;
             }
@@ -344,7 +346,7 @@ public class SettingsActivity extends BaseLockActivity {
             }
             Toast.makeText(this, "Backup exported successfully", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Export failed", e);
             Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
         } finally {
             tempBackupPassword = null;
@@ -375,9 +377,11 @@ public class SettingsActivity extends BaseLockActivity {
             byte[] fileBytes;
             try (InputStream is = getContentResolver().openInputStream(uri)) {
                 if (is == null) throw new Exception("Could not open file");
-                byte[] encodedBytes = new byte[is.available()];
+                // Read all bytes using a loop or available bytes if small enough
+                int size = is.available();
+                byte[] encodedBytes = new byte[size];
                 int read = is.read(encodedBytes);
-                if (read == -1) throw new Exception("File is empty");
+                if (read <= 0) throw new Exception("File is empty or could not be read");
                 fileBytes = Base64.getDecoder().decode(new String(encodedBytes, StandardCharsets.UTF_8));
             }
 
@@ -400,7 +404,7 @@ public class SettingsActivity extends BaseLockActivity {
             showMergeDialog(importedEntries);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Import failed", e);
             Toast.makeText(this, "Import failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
@@ -498,7 +502,7 @@ public class SettingsActivity extends BaseLockActivity {
         confirmBuilder.setView(confirmInput);
         confirmBuilder.setPositiveButton("Change", (dialog, which) -> {
             String confirmCode = confirmInput.getText().toString();
-            if (!newCode.equals(confirmCode)) {
+            if (!java.util.Objects.equals(newCode, confirmCode)) {
                 Toast.makeText(SettingsActivity.this, "Codes do not match", Toast.LENGTH_SHORT).show();
                 return;
             }

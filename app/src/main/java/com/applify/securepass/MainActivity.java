@@ -3,7 +3,6 @@ package com.applify.securepass;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,6 +13,7 @@ import android.content.SharedPreferences;
 import android.widget.ImageButton;
 import android.widget.Toast;
 import javax.crypto.spec.SecretKeySpec;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
         btn9.setOnClickListener(numberListener);
 
         btnDelete.setOnClickListener(v -> {
-            if (enteredCode.length() > 0) {
+            if (!enteredCode.isEmpty()) {
                 enteredCode = enteredCode.substring(0, enteredCode.length() - 1);
                 updateDotDisplay();
                 tvError.setVisibility(View.GONE);
@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
                     tvInstruction.setText("Confirm your 6-digit code");
                 } else {
                     // Confirmation
-                    if (code.equals(pendingCode)) {
+                    if (Objects.equals(code, pendingCode)) {
                         vaultManager.setupNewVault(code);
                         isSetupMode = false;
                         tvInstruction.setText("Vault created! Now unlock.");
