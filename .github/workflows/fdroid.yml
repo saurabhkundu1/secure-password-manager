@@ -40,7 +40,7 @@ jobs:
           keystorepass: fdroidpass
           keypass: fdroidpass
           EOF
-          fdroid update
+          fdroid update --no-androguard
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
