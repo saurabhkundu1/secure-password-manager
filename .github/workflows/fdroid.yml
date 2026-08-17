@@ -15,8 +15,9 @@ jobs:
 
       - name: Download APK from latest release
         run: |
-          ASSET_URL=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | grep "browser_download_url.*apk" | cut -d '"' -f 4)
+          ASSET_URL=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | grep -io 'https://[^"]*\.apk' | head -n 1)
           if [ -z "$ASSET_URL" ]; then echo "No APK asset found"; exit 1; fi
+          echo "Downloading $ASSET_URL"
           wget "$ASSET_URL" -O app-release.apk
 
       - name: Install fdroidserver
@@ -27,10 +28,15 @@ jobs:
       - name: Build F-Droid repo
         run: |
           rm -rf fdroid-repo
-          mkdir fdroid-repo
+          mkdir -p fdroid-repo/repo
+          cp app-release.apk fdroid-repo/repo/
           cd fdroid-repo
-          fdroid init --repo-url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/fdroid-repo/repo
-          cp ../app-release.apk repo/
+          cat > config.yml <<EOF
+          repo_url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/fdroid-repo/repo
+          repo_name: Secure Pass F-Droid Repo
+          repo_description: Encrypted offline password manager
+          archive_older: 0
+          EOF
           fdroid update
 
       - name: Deploy to GitHub Pages
