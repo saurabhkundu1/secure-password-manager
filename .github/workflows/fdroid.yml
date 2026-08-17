@@ -31,11 +31,15 @@ jobs:
           mkdir -p fdroid-repo/repo
           cp app-release.apk fdroid-repo/repo/
           cd fdroid-repo
+          keytool -genkeypair -keystore keystore.jks -alias repo -keyalg RSA -keysize 2048 -validity 10000 -storepass fdroidpass -keypass fdroidpass -dname "CN=Secure Pass Repo"
           cat > config.yml <<EOF
           repo_url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/fdroid-repo/repo
           repo_name: Secure Pass F-Droid Repo
           repo_description: Encrypted offline password manager
           archive_older: 0
+          keystore: keystore.jks
+          keystorepass: fdroidpass
+          keypass: fdroidpass
           EOF
           fdroid update
 
