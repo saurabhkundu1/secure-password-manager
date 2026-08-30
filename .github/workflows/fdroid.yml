@@ -44,7 +44,7 @@ jobs:
           alias: ${{ secrets.KEY_ALIAS }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - - name: Build F-Droid Repository
+      - name: Build F-Droid Repository
         run: |
           sudo apt-get update && sudo apt-get install -y aapt
           pipx install fdroidserver
