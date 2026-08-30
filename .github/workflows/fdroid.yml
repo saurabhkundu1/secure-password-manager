@@ -52,12 +52,15 @@ jobs:
           cp ${{ steps.sign_app.outputs.signedReleaseFile }} fdroid_repo/repo/
           cd fdroid_repo
           cat << 'EOF' > config.yml
-          repo_name: "Applify"
-          repo_description: "Applify Official F-Droid Repository"
           repo_url: "https://saurabhkundu1.github.io/secure-password-manager/repo"
+          repo_name:
+            en-US: "Applify"
+          repo_description:
+            en-US: "Applify Official F-Droid Repository"
           archive_older: 0
           EOF
-          fdroid update --create-metadata --create-key
+          fdroid init
+          fdroid update --create-metadata --create-key --pretty
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
