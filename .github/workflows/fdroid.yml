@@ -1,6 +1,8 @@
 name: Publish F-Droid Repository
 
 on:
+  push:
+    branches: [ main, master ]
   release:
     types: [published]
   workflow_dispatch:
@@ -23,15 +25,35 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Grant Execute Permission to Gradlew
+        run: chmod +x ./gradlew
+
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
-      - name: Generate F-Droid Repository
-        uses: theapache64/fdroid-repo-action@v1
+      - name: Sign APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
         with:
-          apk_path: app/build/outputs/apk/release/*.apk
-          repo_name: "Saurabh Kundu Apps"
-          repo_description: "Personal F-Droid repository for Secure Password Manager"
+          releaseDirectory: app/build/outputs/apk/release
+          signingKey: ${{ secrets.SIGNING_KEY }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias: ${{ secrets.KEY_ALIAS }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Build F-Droid Repository
+        run: |
+          sudo apt-get update && sudo apt-get install -y fdroidserver
+          mkdir -p fdroid_repo/repo
+          cp ${{ steps.sign_app.outputs.signedReleaseFile }} fdroid_repo/repo/
+          cd fdroid_repo
+          cat << 'EOF' > config.yml
+          repo_name: "Applify"
+          repo_description: "Applify Official F-Droid Repository"
+          repo_url: "https://saurabhkundu1.github.io/secure-password-manager/repo"
+          archive_older: 0
+          EOF
+          fdroid update --create-metadata --create-key
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
