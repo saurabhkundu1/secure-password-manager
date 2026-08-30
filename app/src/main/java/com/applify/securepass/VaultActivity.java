@@ -25,7 +25,6 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import javax.crypto.SecretKey;
 
 public class VaultActivity extends BaseLockActivity {
