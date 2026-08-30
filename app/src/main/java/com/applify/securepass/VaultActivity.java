@@ -228,7 +228,7 @@ public class VaultActivity extends BaseLockActivity {
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                int position = viewHolder.getBindingAdapterPosition();
+                int position = viewHolder.getAdapterPosition();
                 VaultItem item = entries.get(position);
                 new AlertDialog.Builder(VaultActivity.this)
                         .setTitle("Delete")
