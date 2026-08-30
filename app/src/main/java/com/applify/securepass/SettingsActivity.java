@@ -21,7 +21,6 @@ import android.net.Uri;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatDelegate;
 
 import com.applify.securepass.crypto.CryptoManager;
 import com.applify.securepass.data.VaultItem;
@@ -45,7 +44,7 @@ import javax.crypto.SecretKey;
 public class SettingsActivity extends BaseLockActivity {
     private static final String TAG = "SettingsActivity";
     private SwitchMaterial switchFingerprint;
-    private Button btnChangeCode, btnLockVault, btnExport, btnImport, btnGithub, btnCheckUpdates, btnSubmitFeedback;
+    private Button btnLockVault, btnExport, btnImport, btnGithub, btnCheckUpdates, btnSubmitFeedback;
     private SharedPreferences prefs;
     private VaultManager vaultManager;
 
@@ -106,7 +105,7 @@ public class SettingsActivity extends BaseLockActivity {
 
         switchFingerprint = findViewById(R.id.switchFingerprint);
         TextView tvLastCodeTime = findViewById(R.id.tvLastCodeTime);
-        btnChangeCode = findViewById(R.id.btnChangeCode);
+        Button btnChangeCode = findViewById(R.id.btnChangeCode);
         btnLockVault = findViewById(R.id.btnLockVault);
 
         // Theme controls
