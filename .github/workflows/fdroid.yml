@@ -44,9 +44,10 @@ jobs:
           alias: ${{ secrets.KEY_ALIAS }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Build F-Droid Repository
+      - - name: Build F-Droid Repository
         run: |
-          sudo apt-get update && sudo apt-get install -y fdroidserver
+          sudo apt-get update && sudo apt-get install -y aapt
+          pipx install fdroidserver
           mkdir -p fdroid_repo/repo
           cp ${{ steps.sign_app.outputs.signedReleaseFile }} fdroid_repo/repo/
           cd fdroid_repo
@@ -57,7 +58,6 @@ jobs:
           archive_older: 0
           EOF
           fdroid update --create-metadata --create-key
-
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
