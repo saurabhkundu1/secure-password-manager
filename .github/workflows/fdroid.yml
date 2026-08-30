@@ -36,10 +36,11 @@ jobs:
         id: sign_app
         with:
           releaseDirectory: app/build/outputs/apk/release
-          signingKey: ${{ secrets.SIGNING_KEY }}
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyAlias: ${{ secrets.KEY_ALIAS }}
+          alias: ${{ secrets.KEY_ALIAS }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+          buildToolsVersion: "35.0.0"
 
       - name: Build F-Droid Repository
         run: |
