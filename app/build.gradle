@@ -20,17 +20,28 @@ android {
         release {
             // Priority: Environment Variable > Gradle Property > Default file
             def ksPath = System.getenv("KEYSTORE_PATH") ?: (project.findProperty("KEYSTORE_PATH") ?: "../secure-pass-key.jks")
-            storeFile file(ksPath)
-            storePassword System.getenv("KEYSTORE_PASSWORD") ?: project.findProperty("KEYSTORE_PASSWORD")
-            keyAlias System.getenv("KEY_ALIAS") ?: project.findProperty("KEY_ALIAS")
-            keyPassword System.getenv("KEY_PASSWORD") ?: project.findProperty("KEY_PASSWORD")
+            def ksFile = file(ksPath)
+            def ksPass = System.getenv("KEYSTORE_PASSWORD") ?: project.findProperty("KEYSTORE_PASSWORD")
+            def kAlias = System.getenv("KEY_ALIAS") ?: project.findProperty("KEY_ALIAS")
+            def kPass = System.getenv("KEY_PASSWORD") ?: project.findProperty("KEY_PASSWORD")
+
+            // Only configure if all properties are present and file exists
+            if (ksFile.exists() && ksPass && kAlias && kPass) {
+                storeFile ksFile
+                storePassword ksPass
+                keyAlias kAlias
+                keyPassword kPass
+            }
         }
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.release
+            // Dynamically assign signing config only if it was configured above
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
