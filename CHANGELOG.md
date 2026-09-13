@@ -2,6 +2,15 @@
 
 All notable changes to the **Secure Pass** project will be documented in this file.
 
+## [1.0.0.1] - 2026-09-13
+
+### Added ✨
+- **Theme-Aware App Icons**: Dynamic light and dark mode icon variants for Classic Blue, Crimson Red, Royal Purple, Forest Green, and Amber Gold.
+- **Color Palette Alignment**: App icons and theme colors now dynamically match user selection across all display modes.
+
+### Fixed 🐛
+- **F-Droid Integrity Verification**: Configured persistent keystore signing for Applify repository publishing.
+
 ## [1.1.0] - 2026-08-02
 
 ### Added ✨
