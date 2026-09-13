@@ -77,11 +77,11 @@ public class SettingsActivity extends BaseLockActivity {
     // Color palette definitions (hex)
     private static final int[] PALETTE_COLORS = {
             0xFF00897B, // Teal (default)
-            0xFF1976D2, // Blue
-            0xFF388E3C, // Green
-            0xFF7B1FA2, // Purple
-            0xFFD32F2F, // Red
-            0xFFF57C00, // Orange
+            0xFF1976D2, // Blue (Classic Blue)
+            0xFF388E3C, // Green (Forest Green)
+            0xFF7B1FA2, // Purple (Royal Purple)
+            0xFFD32F2F, // Red (Crimson Red)
+            0xFFFFA000, // Amber Gold
             0xFF3F51B5, // Indigo
             0xFFD81B60, // Pink
             0xFF212121, // Onyx

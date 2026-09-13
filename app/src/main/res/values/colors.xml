@@ -27,6 +27,9 @@
     <color name="palette_orange_primary">#F57C00</color>
     <color name="palette_orange_variant">#E65100</color>
 
+    <color name="palette_amber_primary">#FFA000</color>
+    <color name="palette_amber_variant">#FF8F00</color>
+
     <color name="palette_indigo_primary">#3F51B5</color>
     <color name="palette_indigo_variant">#303F9F</color>
 

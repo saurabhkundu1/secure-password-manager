@@ -11,12 +11,12 @@
     android:paddingEnd="24dp"
     android:background="?android:attr/colorBackground">
 
-    <!-- App Icon (a simple shield, you can replace later) -->
+    <!-- App Icon -->
     <ImageView
         android:id="@+id/ivLockIcon"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:src="@android:drawable/ic_lock_idle_lock"
+        android:src="@drawable/classic_blue"
         android:contentDescription="Secure Pass"
         android:layout_marginBottom="16dp"/>
 

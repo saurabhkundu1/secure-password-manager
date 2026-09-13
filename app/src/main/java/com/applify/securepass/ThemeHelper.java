@@ -1,6 +1,7 @@
 package com.applify.securepass;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import androidx.appcompat.app.AppCompatDelegate;
 
@@ -47,7 +48,7 @@ public class ThemeHelper {
             case 2: return R.style.Theme_SecurePass_Green;
             case 3: return R.style.Theme_SecurePass_Purple;
             case 4: return R.style.Theme_SecurePass_Red;
-            case 5: return R.style.Theme_SecurePass_Orange;
+            case 5: return R.style.Theme_SecurePass_Amber;
             case 6: return R.style.Theme_SecurePass_Indigo;
             case 7: return R.style.Theme_SecurePass_Pink;
             case 8: return R.style.Theme_SecurePass_Onyx;
@@ -57,6 +58,30 @@ public class ThemeHelper {
             case 12: return R.style.Theme_SecurePass_Grey;
             default: return R.style.Theme_SecurePass_Teal;
         }
+    }
+
+    /**
+     * Returns the matching theme icon drawable resource ID for the active color palette.
+     * The theme icons automatically switch between light and dark mode variants via res/drawable and res/drawable-night.
+     */
+    public static int getThemeIconResId(int palette) {
+        switch (palette) {
+            case 1: return R.drawable.classic_blue;
+            case 2: return R.drawable.forest_green;
+            case 3: return R.drawable.royal_purple;
+            case 4: return R.drawable.crimson_red;
+            case 5: return R.drawable.amber_gold;
+            default: return R.drawable.classic_blue;
+        }
+    }
+
+    /**
+     * Helper to get the theme icon resource ID for the currently saved theme palette.
+     */
+    public static int getCurrentThemeIconResId(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences("secure_pass_prefs", Context.MODE_PRIVATE);
+        int palette = prefs.getInt(KEY_COLOR_PALETTE, 0);
+        return getThemeIconResId(palette);
     }
 
     // Deprecated but kept for compatibility if needed elsewhere temporarily

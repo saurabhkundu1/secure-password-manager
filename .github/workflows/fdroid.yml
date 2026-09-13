@@ -49,16 +49,28 @@ jobs:
           sudo apt-get update && sudo apt-get install -y aapt python3-pip python3-setuptools libjpeg-dev zlib1g-dev
           pip3 install --user fdroidserver
           export PATH=$PATH:$HOME/.local/bin
+
+          # Decode the persistent signing keystore OUTSIDE fdroid_repo directory
+          echo "${{ secrets.SIGNING_KEY }}" | base64 -d > keystore.jks
+
           mkdir -p fdroid_repo/repo
-          cp ${{ steps.sign_app.outputs.signedReleaseFile }} fdroid_repo/repo/
+          cp ${{ steps.sign_app.outputs.signedReleaseFile }} fdroid_repo/repo/app-release.apk
+
           cd fdroid_repo
-          cat << 'EOF' > config.yml
+          cat << EOF > config.yml
           repo_name: "Applify"
           repo_description: "Applify Official F-Droid Repository"
           repo_url: "https://saurabhkundu1.github.io/secure-password-manager/repo"
+          keystore: "../keystore.jks"
+          repo_keyalias: "${{ secrets.KEY_ALIAS }}"
+          keystorepass: "${{ secrets.KEYSTORE_PASSWORD }}"
+          keypass: "${{ secrets.KEY_PASSWORD }}"
           archive_older: 0
           EOF
-          fdroid update --create-metadata --create-key
+
+          # Generate index and sign repository using persistent keystore
+          fdroid update --create-metadata
+          fdroid signindex
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
