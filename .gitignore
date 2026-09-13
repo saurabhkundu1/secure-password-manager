@@ -1,3 +1,4 @@
+```
 # Logs and temp files
 *.log
 *.tmp
@@ -6,7 +7,7 @@
 # Environment
 .env
 .env.local
-*.env.*
+.env.*
 
 # Editors
 .vscode/
@@ -17,38 +18,43 @@
 venv/
 node_modules/
 
-# Build artifacts
-dist/
-build/
-target/
-
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-# Compiled files
-*.o
-*.obj
-*.so
-*.dll
-*.exe
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Coverage
-coverage/
-htmlcov/
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
 .coverage
-
-# Gradle
-.gradle/
-
-# MyPy
-.mypy_cache/
-
-# PyTest
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/modules/
+.DS_Store
+*.swp
+*~
 .pytest_cache/
+.mypy_cache/
+.hypothesis/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+```

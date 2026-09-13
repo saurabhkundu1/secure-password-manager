@@ -6,13 +6,6 @@
 An offline, high-security encrypted password manager for Android.  
 Store your credentials safely in a local, encrypted vault using **AES-256-GCM**, unlocked via a **6-digit PIN** or **Biometrics**.
 
-## 📸 Screenshots
-
-| Light Mode | Dark Mode | Biometric Auth |
-|:---:|:---:|:---:|
-| ![Light](screenshots/light.png) | ![Dark](screenshots/dark.png) | ![Auth](screenshots/biometric.png) |
-*(Add your screenshots to the `screenshots/` folder)*
-
 ## 🚀 Features
 
 - 🔒 **Total Privacy** – 100% offline. No internet permissions required. Your data never leaves your device.
@@ -58,6 +51,9 @@ Store your credentials safely in a local, encrypted vault using **AES-256-GCM**,
    ./gradlew assembleDebug
    ```
    The APK will be generated at `app/build/outputs/apk/debug/app-debug.apk`.
+
+> **⚠️ Note for Droidify/F-Droid Users:**  
+> If you encounter validation errors like *"Couldn't validate Secure Pass"* or *"Couldn't check integrity"*, this is because the app is signed with a debug key when built locally or via third-party stores. For verified builds, please download the official release APK directly from the [Releases page](https://github.com/saurabhkundu1/secure-password-manager/releases), which is signed with the developer's release key.
 
 ## 🤝 Contribution
 
