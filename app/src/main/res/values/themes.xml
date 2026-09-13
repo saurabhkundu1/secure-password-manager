@@ -41,6 +41,11 @@
         <item name="android:statusBarColor">@color/palette_orange_variant</item>
     </style>
 
+    <style name="Theme.SecurePass.Amber" parent="Theme.SecurePass">
+        <item name="colorPrimary">@color/palette_amber_primary</item>
+        <item name="android:statusBarColor">@color/palette_amber_variant</item>
+    </style>
+
     <style name="Theme.SecurePass.Indigo" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_indigo_primary</item>
         <item name="android:statusBarColor">@color/palette_indigo_variant</item>

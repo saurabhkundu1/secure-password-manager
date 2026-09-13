@@ -1,8 +1,10 @@
 package com.applify.securepass;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,6 +15,8 @@ import android.content.SharedPreferences;
 import android.widget.ImageButton;
 import android.widget.Toast;
 import javax.crypto.spec.SecretKeySpec;
+
+import java.io.File;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
@@ -42,6 +46,10 @@ public class MainActivity extends AppCompatActivity {
         vaultManager = new VaultManager(this);
 
         // Bind UI elements
+        ImageView ivLockIcon = findViewById(R.id.ivLockIcon);
+        if (ivLockIcon != null) {
+            ivLockIcon.setImageResource(ThemeHelper.getCurrentThemeIconResId(this));
+        }
         tvInstruction = findViewById(R.id.tvInstruction);
         tvError = findViewById(R.id.tvError);
         pinDotsContainer = findViewById(R.id.pinDotsContainer);
@@ -78,10 +86,10 @@ public class MainActivity extends AppCompatActivity {
         updateDotDisplay();
 
         // Security check: Log vault file info
-        java.io.File vaultFile = new java.io.File(getFilesDir(), "vault.txt");
+        File vaultFile = new File(getFilesDir(), "vault.txt");
         if (vaultFile.exists()) {
-            android.util.Log.d("SecurePass", "Vault file detected: " + vaultFile.getAbsolutePath());
-            android.util.Log.d("SecurePass", "File size: " + vaultFile.length() + " bytes");
+            Log.d("SecurePass", "Vault file detected: " + vaultFile.getAbsolutePath());
+            Log.d("SecurePass", "File size: " + vaultFile.length() + " bytes");
         }
     }
 
