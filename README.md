@@ -1,7 +1,17 @@
 # Secure Pass 🔐
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![API](https://img.shields.io/badge/API-26%2B-brightgreen.svg)](https://android-arsenal.com/api?level=26)
+
 An offline, high-security encrypted password manager for Android.  
 Store your credentials safely in a local, encrypted vault using **AES-256-GCM**, unlocked via a **6-digit PIN** or **Biometrics**.
+
+## 📸 Screenshots
+
+| Light Mode | Dark Mode | Biometric Auth |
+|:---:|:---:|:---:|
+| ![Light](screenshots/light.png) | ![Dark](screenshots/dark.png) | ![Auth](screenshots/biometric.png) |
+*(Add your screenshots to the `screenshots/` folder)*
 
 ## 🚀 Features
 
@@ -30,17 +40,47 @@ Store your credentials safely in a local, encrypted vault using **AES-256-GCM**,
 
 ## 📦 Installation
 
+### Option 1: Download from Releases (Recommended)
+1. Go to the [Releases page](https://github.com/saurabhkundu1/secure-password-manager/releases).
+2. Download the latest `.apk` file.
+3. Install it on your Android device (enable "Install from Unknown Sources" if prompted).
+
+### Option 2: Build from Source
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/saurabhkundu1/secure-password-manager.git
+   cd secure-password-manager
    ```
 2. **Open in Android Studio**: Import the project.
 3. **Sync Gradle**: Ensure all dependencies are downloaded.
 4. **Build & Run**: Deploy to a device or emulator running **Android 8.0 (API 26)** or higher.
+   ```bash
+   ./gradlew assembleDebug
+   ```
+   The APK will be generated at `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## 🤝 Contribution
 
 Contributions are welcome! Feel free to open issues or submit pull requests on the [GitHub repository](https://github.com/saurabhkundu1/secure-password-manager) to improve security or add features.
+
+### How to Contribute
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+4. Push to the branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.
+
+## 📞 Contact & Support
+
+- **Report Bugs**: [GitHub Issues](https://github.com/saurabhkundu1/secure-password-manager/issues)
+- **Request Features**: [GitHub Discussions](https://github.com/saurabhkundu1/secure-password-manager/discussions)
+- **Email**: [saurabhkundu1@example.com](mailto:saurabhkundu1@example.com) *(Optional)*
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ by <a href="https://github.com/saurabhkundu1">saurabhkundu1</a></sub>
+</div>
 
 ## 📄 License
 
