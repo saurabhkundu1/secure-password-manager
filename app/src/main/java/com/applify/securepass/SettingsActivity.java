@@ -288,6 +288,7 @@ public class SettingsActivity extends BaseLockActivity {
 
             colorCircle.setOnClickListener(v -> {
                 prefs.edit().putInt(KEY_COLOR_PALETTE, index).apply();
+                ThemeHelper.updateAppIcon(this, index);
                 // Rebuild to update selection
                 buildColorPalette();
                 // Apply the new palette by restarting the activity (or we can call recreate())

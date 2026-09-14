@@ -1,8 +1,11 @@
 package com.applify.securepass;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+
 import androidx.appcompat.app.AppCompatDelegate;
 
 public class ThemeHelper {
@@ -14,7 +17,7 @@ public class ThemeHelper {
      * This must be called BEFORE super.onCreate() and setContentView().
      */
     public static void applyTheme(Activity activity) {
-        SharedPreferences prefs = activity.getSharedPreferences("secure_pass_prefs", Activity.MODE_PRIVATE);
+        SharedPreferences prefs = activity.getSharedPreferences("secure_pass_prefs", Context.MODE_PRIVATE);
         
         // 1. Apply Theme Mode (Night/Day)
         int mode = prefs.getInt(KEY_THEME_MODE, 2); // default system
@@ -82,6 +85,44 @@ public class ThemeHelper {
         SharedPreferences prefs = context.getSharedPreferences("secure_pass_prefs", Context.MODE_PRIVATE);
         int palette = prefs.getInt(KEY_COLOR_PALETTE, 0);
         return getThemeIconResId(palette);
+    }
+
+    /**
+     * Dynamically changes the app launcher icon based on the selected palette.
+     */
+    public static void updateAppIcon(Context context, int palette) {
+        PackageManager pm = context.getPackageManager();
+        String pkg = context.getPackageName();
+
+        // Map palette index to alias name
+        String activeAlias = pkg + ".MainActivityBlue"; // Default fallback
+        switch (palette) {
+            case 1: activeAlias = pkg + ".MainActivityBlue"; break;
+            case 2: activeAlias = pkg + ".MainActivityGreen"; break;
+            case 3: activeAlias = pkg + ".MainActivityPurple"; break;
+            case 4: activeAlias = pkg + ".MainActivityRed"; break;
+            case 5: activeAlias = pkg + ".MainActivityAmber"; break;
+        }
+
+        String[] allAliases = {
+            pkg + ".MainActivityBlue",
+            pkg + ".MainActivityGreen",
+            pkg + ".MainActivityPurple",
+            pkg + ".MainActivityRed",
+            pkg + ".MainActivityAmber"
+        };
+
+        for (String alias : allAliases) {
+            int state = alias.equals(activeAlias) ?
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED :
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+                    
+            pm.setComponentEnabledSetting(
+                    new ComponentName(pkg, alias),
+                    state,
+                    PackageManager.DONT_KILL_APP
+            );
+        }
     }
 
     // Deprecated but kept for compatibility if needed elsewhere temporarily
