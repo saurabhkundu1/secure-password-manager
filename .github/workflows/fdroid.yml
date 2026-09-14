@@ -121,9 +121,16 @@ jobs:
           # Copy signed APK with standard F-Droid naming convention
           cp "$SIGNED_APK" "fdroid_repo/repo/com.applify.securepass_${VC}.apk"
 
+          # Add App Icon and Metadata to F-Droid Repo
+          mkdir -p fdroid_repo/repo/com.applify.securepass/en-US/images
+          cp fastlane/metadata/android/en-US/*.txt fdroid_repo/repo/com.applify.securepass/en-US/ || true
+          cp app/src/main/res/drawable/classic_blue.png fdroid_repo/repo/com.applify.securepass/en-US/images/icon.png
+          cp app/src/main/res/drawable/classic_blue.png fdroid_repo/repo/icon.png
+
           cd fdroid_repo
           cat << EOF > config.yml
           repo_name: "Applify"
+          repo_icon: "icon.png"
           repo_description: "Applify Official F-Droid Repository"
           repo_url: "https://saurabhkundu1.github.io/secure-password-manager/repo"
           sdk_path: "${ANDROID_HOME}"
