@@ -2,6 +2,16 @@
 
 All notable changes to the **Secure Pass** project will be documented in this file.
 
+## [1.0.0.3] - 2026-09-14
+
+### Added ✨
+- **Dynamic Launcher Icons**: Selecting a color palette in Settings now instantly updates the app's official launcher icon on your home screen to match! 
+- **Splash Screen Optimization**: Significantly reduced the memory footprint of the high-res app icons to ensure they render smoothly on the system Splash Screen and Android Biometric Prompt dialog without invisible dropouts.
+- **Biometric UI Update**: Updated the internal biometric button on the lock screen to use the active colored app logo instead of a generic system 'info' icon.
+
+### Fixed 🐛
+- **F-Droid Ghost App**: Removed an invalid `icon` listing in the F-Droid repository that appeared as an empty standalone app.
+
 ## [1.0.0.2] - 2026-09-14
 
 ### Fixed 🐛

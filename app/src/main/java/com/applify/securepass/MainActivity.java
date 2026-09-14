@@ -68,6 +68,10 @@ public class MainActivity extends AppCompatActivity {
         btnDelete = findViewById(R.id.btnDelete);
         btnSubmit = findViewById(R.id.btnSubmit);
         btnBiometric = findViewById(R.id.btnBiometric);
+        
+        if (btnBiometric != null) {
+            btnBiometric.setImageResource(ThemeHelper.getCurrentThemeIconResId(this));
+        }
 
         // Set click listeners
         setNumberPadListeners();
