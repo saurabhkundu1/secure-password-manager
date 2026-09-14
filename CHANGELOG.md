@@ -2,6 +2,12 @@
 
 All notable changes to the **Secure Pass** project will be documented in this file.
 
+## [1.0.0.2] - 2026-09-14
+
+### Fixed 🐛
+- **UI Contrast**: Improved the contrast of the lock screen number pad buttons in Dark Mode to ensure they remain clearly legible against system backgrounds.
+- **Edge-to-Edge Padding**: Added `android:fitsSystemWindows="true"` across main layouts (`activity_main.xml`, `activity_setting.xml`, `activity_vault.xml`, `activity_add_edit.xml`) to prevent the app UI from bleeding into or hiding behind the Android notification status bar.
+
 ## [1.0.0.1] - 2026-09-13
 
 ### Added ✨

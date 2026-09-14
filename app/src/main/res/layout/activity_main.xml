@@ -6,9 +6,10 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center_horizontal"
-    android:paddingTop="64dp"
+    android:paddingTop="32dp"
     android:paddingStart="24dp"
     android:paddingEnd="24dp"
+    android:fitsSystemWindows="true"
     android:background="?android:attr/colorBackground">
 
     <!-- App Icon -->
