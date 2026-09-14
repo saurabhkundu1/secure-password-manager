@@ -118,9 +118,8 @@ jobs:
           VC=$(aapt dump badging "$SIGNED_APK" | grep versionCode | sed -n "s/.*versionCode='\\([^']*\\)'.*/\\1/p")
           if [ -z "$VC" ]; then VC="2"; fi
 
-          # Copy signed APK with standard F-Droid naming and default naming
+          # Copy signed APK with standard F-Droid naming convention
           cp "$SIGNED_APK" "fdroid_repo/repo/com.applify.securepass_${VC}.apk"
-          cp "$SIGNED_APK" "fdroid_repo/repo/app-release.apk"
 
           cd fdroid_repo
           cat << EOF > config.yml
@@ -139,8 +138,12 @@ jobs:
           fdroid update --create-metadata --pretty
           fdroid signindex
 
-          # Copy generated index and apk to root of fdroid_repo so both root URL and /repo URL work in Droid-ify
+          # Copy generated index and apk to root of fdroid_repo so both root URL and /repo URL work
           cp -r repo/* ./
+
+          # CRITICAL: Prevent GitHub Pages Jekyll processing from returning HTTP 404 on raw .apk & .json files
+          touch .nojekyll
+          touch repo/.nojekyll
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
