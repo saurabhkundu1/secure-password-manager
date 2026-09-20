@@ -125,11 +125,11 @@ jobs:
           # Copy signed APK with standard F-Droid naming convention
           cp "$SIGNED_APK" "fdroid_repo/repo/com.applify.securepass_${VC}.apk"
 
-          # Add App Icon and Metadata to F-Droid Repo
+          # Add App Icon and Metadata to F-Droid Repo (Outside repo/ directory so it isn't parsed as a fake app)
           mkdir -p fdroid_repo/metadata/com.applify.securepass/en-US/images
           cp fastlane/metadata/android/en-US/*.txt fdroid_repo/metadata/com.applify.securepass/en-US/ || true
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/metadata/com.applify.securepass/en-US/images/icon.png
-          cp app/src/main/res/drawable/classic_blue.png fdroid_repo/repo/icon.png
+          cp app/src/main/res/drawable/classic_blue.png fdroid_repo/icon.png
 
           # Explicitly define App Metadata to fix suggestedVersionCode bugs
           cat << EOF > fdroid_repo/metadata/com.applify.securepass.yml
