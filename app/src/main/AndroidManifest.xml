@@ -10,7 +10,10 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:resizeableActivity="true"
         android:theme="@style/Theme.SecurePass">
+
+        <meta-data android:name="android.max_aspect" android:value="2.4" />
 
         <activity
             android:name=".MainActivity"

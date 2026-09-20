@@ -134,8 +134,6 @@
                 android:useDefaultMargins="true"
                 android:alignmentMode="alignBounds"
                 android:layout_gravity="center_horizontal">
-
-                <!-- We'll add color circles programmatically -->
             </GridLayout>
 
             <View
@@ -143,6 +141,71 @@
                 android:layout_height="1dp"
                 android:background="?android:attr/dividerVertical"
                 android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- App Icon Settings -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="App Icon &amp; Swipe Actions"
+                android:textSize="18sp"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchSyncIcon"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sync icon color with theme palette"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Custom App Icon Color:"
+                android:layout_marginTop="8dp"
+                android:textSize="14sp" />
+
+            <Spinner
+                android:id="@+id/spinnerAppIcon"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Swipe Right Action:"
+                android:layout_marginTop="8dp"
+                android:textSize="14sp" />
+
+            <Spinner
+                android:id="@+id/spinnerSwipeRight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Swipe Left Action:"
+                android:layout_marginTop="8dp"
+                android:textSize="14sp" />
+
+            <Spinner
+                android:id="@+id/spinnerSwipeLeft"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:layout_marginBottom="16dp"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/dividerVertical"
                 android:layout_marginBottom="16dp"/>
 
             <!-- Support & Feedback section -->

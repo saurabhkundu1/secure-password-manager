@@ -2,6 +2,18 @@
 
 All notable changes to the **Secure Pass** project will be documented in this file.
 
+## [1.0.0.4] - 2026-09-14
+
+### Added ✨
+- **Customizable App Icon**: Explicit option added in Settings to select your preferred App Launcher Icon color independently.
+- **Icon Synchronization**: Added a setting to automatically sync the app's internal color palette with your chosen launcher icon color.
+- **Custom Swipe Actions**: You can now define what Swiping Right and Swiping Left does in the Vault! Choose between 'Delete', 'Pin to Top (Favorite)', or 'None' via the Settings menu.
+- **Swipe Visuals**: Added intuitive background color gradients while swiping cards (Red for Delete, Amber for Pin).
+
+### Improved 🎨
+- **Aspect Ratio & Scaling**: Implemented proper dynamic screen ratio parameters (`resizeableActivity`, `max_aspect`) to ensure the app adjusts seamlessly to ultra-tall aspect ratios and varying screen sizes.
+- **Image Aspect Ratios**: Added `fitCenter` to ensure the splash screen icons never distort.
+
 ## [1.0.0.3] - 2026-09-14
 
 ### Added ✨

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SecurePass" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/palette_teal_primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">#FFB300</item>
+        <item name="colorOnSecondary">#000000</item>
+        <item name="android:statusBarColor">@color/palette_teal_variant</item>
+        <item name="android:windowBackground">?android:attr/colorBackground</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+</resources>
