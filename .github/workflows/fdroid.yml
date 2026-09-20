@@ -34,8 +34,8 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
-      - name: Install Android Build Tools 29.0.3
-        run: echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;29.0.3"
+      - name: Install Android Build Tools 34.0.0
+        run: echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0"
 
       - name: Sign APK
         uses: r0adkll/sign-android-release@v1
@@ -125,6 +125,24 @@ jobs:
           mkdir -p fdroid_repo/metadata/com.applify.securepass/en-US/images
           cp fastlane/metadata/android/en-US/*.txt fdroid_repo/metadata/com.applify.securepass/en-US/ || true
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/metadata/com.applify.securepass/en-US/images/icon.png
+          cp app/src/main/res/drawable/classic_blue.png fdroid_repo/repo/icon.png
+
+          # Explicitly define App Metadata to fix suggestedVersionCode bugs
+          cat << EOF > fdroid_repo/metadata/com.applify.securepass.yml
+          Categories:
+            - Security
+          License: Unknown
+          WebSite: "https://github.com/saurabhkundu1/secure-password-manager"
+          SourceCode: "https://github.com/saurabhkundu1/secure-password-manager"
+          IssueTracker: "https://github.com/saurabhkundu1/secure-password-manager/issues"
+          Name: "Secure Pass"
+          Summary: "Offline Secure Password Manager"
+          Description: |-
+            Secure Password Manager with AES-256-GCM encryption.
+          AutoName: "Secure Pass"
+          CurrentVersion: "${VERSION}"
+          CurrentVersionCode: ${VC}
+          EOF
 
           cd fdroid_repo
           cat << EOF > config.yml
