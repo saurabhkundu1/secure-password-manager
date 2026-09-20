@@ -4,10 +4,12 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.format.DateUtils;
 import android.view.View;
 import android.widget.Button;
 import android.util.Log;
+import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -121,6 +123,12 @@ public class SettingsActivity extends BaseLockActivity {
         btnCheckUpdates = findViewById(R.id.btnCheckUpdates);
         btnSubmitFeedback = findViewById(R.id.btnSubmitFeedback);
 
+        // App Icon and Swipe control
+        SwitchMaterial switchSyncIcon = findViewById(R.id.switchSyncIcon);
+        Spinner spinnerAppIcon = findViewById(R.id.spinnerAppIcon);
+        Spinner spinnerSwipeRight = findViewById(R.id.spinnerSwipeRight);
+        Spinner spinnerSwipeLeft = findViewById(R.id.spinnerSwipeLeft);
+
         // Set initial switch state
         boolean fingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false);
         switchFingerprint.setChecked(fingerprintEnabled);
@@ -135,6 +143,7 @@ public class SettingsActivity extends BaseLockActivity {
         // Restore theme selections
         restoreThemeSettings();
         setupAutoLockSpinner();
+        setupAppIconAndSwipes(switchSyncIcon, spinnerAppIcon, spinnerSwipeRight, spinnerSwipeLeft);
 
         // Fingerprint toggle listener
         switchFingerprint.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -246,7 +255,7 @@ public class SettingsActivity extends BaseLockActivity {
 
         long currentTime = prefs.getLong(KEY_AUTO_LOCK, 0);
         for (int i = 0; i < AUTO_LOCK_VALUES.length; i++) {
-            if (java.util.Objects.equals(AUTO_LOCK_VALUES[i], currentTime)) {
+            if (Objects.equals(AUTO_LOCK_VALUES[i], currentTime)) {
                 spinnerAutoLock.setSelection(i);
                 break;
             }
@@ -256,6 +265,70 @@ public class SettingsActivity extends BaseLockActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 prefs.edit().putLong(KEY_AUTO_LOCK, AUTO_LOCK_VALUES[position]).apply();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
+    private void setupAppIconAndSwipes(SwitchMaterial switchSyncIcon, Spinner spinnerAppIcon, Spinner spinnerSwipeRight, Spinner spinnerSwipeLeft) {
+        boolean syncEnabled = prefs.getBoolean("sync_icon_palette", true);
+        switchSyncIcon.setChecked(syncEnabled);
+
+        switchSyncIcon.setOnCheckedChangeListener((btn, isChecked) -> {
+            prefs.edit().putBoolean("sync_icon_palette", isChecked).apply();
+            if (isChecked) {
+                // Instantly sync
+                int currentPalette = prefs.getInt(KEY_COLOR_PALETTE, 0);
+                ThemeHelper.updateAppIcon(this, currentPalette);
+            }
+        });
+
+        // App Icon Selector (Independent if sync is off)
+        String[] iconOptions = {"Teal (Default)", "Classic Blue", "Forest Green", "Royal Purple", "Crimson Red", "Amber Gold"};
+        ArrayAdapter<String> iconAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, iconOptions);
+        iconAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerAppIcon.setAdapter(iconAdapter);
+        int currentIconIndex = prefs.getInt("custom_app_icon", 0);
+        spinnerAppIcon.setSelection(currentIconIndex);
+
+        spinnerAppIcon.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                prefs.edit().putInt("custom_app_icon", position).apply();
+                if (!prefs.getBoolean("sync_icon_palette", true)) {
+                    ThemeHelper.updateAppIcon(SettingsActivity.this, position);
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        // Swipe Options
+        String[] swipeOptions = {"None", "Delete", "Pin to Top / Favorite"};
+        ArrayAdapter<String> swipeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, swipeOptions);
+        swipeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        
+        spinnerSwipeRight.setAdapter(swipeAdapter);
+        spinnerSwipeLeft.setAdapter(swipeAdapter);
+
+        // Right defaults to Delete (1), Left defaults to Favorite (2)
+        spinnerSwipeRight.setSelection(prefs.getInt("swipe_right_action", 1));
+        spinnerSwipeLeft.setSelection(prefs.getInt("swipe_left_action", 2));
+
+        spinnerSwipeRight.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                prefs.edit().putInt("swipe_right_action", position).apply();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        spinnerSwipeLeft.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                prefs.edit().putInt("swipe_left_action", position).apply();
             }
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
@@ -288,7 +361,11 @@ public class SettingsActivity extends BaseLockActivity {
 
             colorCircle.setOnClickListener(v -> {
                 prefs.edit().putInt(KEY_COLOR_PALETTE, index).apply();
-                ThemeHelper.updateAppIcon(this, index);
+                if (prefs.getBoolean("sync_icon_palette", true)) {
+                    ThemeHelper.updateAppIcon(this, index);
+                    // Also update spinner to reflect sync
+                    prefs.edit().putInt("custom_app_icon", index).apply();
+                }
                 // Rebuild to update selection
                 buildColorPalette();
                 // Apply the new palette by restarting the activity (or we can call recreate())
@@ -304,8 +381,8 @@ public class SettingsActivity extends BaseLockActivity {
     private void promptBackupPassword() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Set Backup Password");
-        final android.widget.EditText input = new android.widget.EditText(this);
-        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         builder.setView(input);
         builder.setPositiveButton("Continue", (dialog, which) -> {
             tempBackupPassword = input.getText().toString();
@@ -362,8 +439,8 @@ public class SettingsActivity extends BaseLockActivity {
     private void getPassword(PasswordCallback callback) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Enter Backup Password");
-        final android.widget.EditText input = new android.widget.EditText(this);
-        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         builder.setView(input);
         builder.setPositiveButton("OK", (dialog, which) -> callback.onPassword(input.getText().toString()));
         builder.setNegativeButton("Cancel", null);
@@ -438,8 +515,8 @@ public class SettingsActivity extends BaseLockActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Enter Master Code");
         builder.setMessage("To " + reason + ", enter your 6‑digit code.");
-        final android.widget.EditText input = new android.widget.EditText(this);
-        input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
         builder.setView(input);
         builder.setPositiveButton("OK", (dialog, which) -> {
             String code = input.getText().toString();
@@ -458,8 +535,8 @@ public class SettingsActivity extends BaseLockActivity {
         AlertDialog.Builder oldCodeBuilder = new AlertDialog.Builder(this);
         oldCodeBuilder.setTitle("Current Code");
         oldCodeBuilder.setMessage("Enter your current 6‑digit code.");
-        final android.widget.EditText oldInput = new android.widget.EditText(this);
-        oldInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        final EditText oldInput = new EditText(this);
+        oldInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
         oldCodeBuilder.setView(oldInput);
         oldCodeBuilder.setPositiveButton("Next", (dialog, which) -> {
             String oldCode = oldInput.getText().toString();
@@ -478,8 +555,8 @@ public class SettingsActivity extends BaseLockActivity {
         AlertDialog.Builder newCodeBuilder = new AlertDialog.Builder(this);
         newCodeBuilder.setTitle("New Code");
         newCodeBuilder.setMessage("Enter a new 6‑digit code.");
-        final android.widget.EditText newInput = new android.widget.EditText(this);
-        newInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        final EditText newInput = new EditText(this);
+        newInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
         newCodeBuilder.setView(newInput);
         newCodeBuilder.setPositiveButton("Next", (dialog, which) -> {
             String newCode = newInput.getText().toString();
@@ -497,12 +574,12 @@ public class SettingsActivity extends BaseLockActivity {
         AlertDialog.Builder confirmBuilder = new AlertDialog.Builder(this);
         confirmBuilder.setTitle("Confirm New Code");
         confirmBuilder.setMessage("Re‑enter the new 6‑digit code.");
-        final android.widget.EditText confirmInput = new android.widget.EditText(this);
-        confirmInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        final EditText confirmInput = new EditText(this);
+        confirmInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
         confirmBuilder.setView(confirmInput);
         confirmBuilder.setPositiveButton("Change", (dialog, which) -> {
             String confirmCode = confirmInput.getText().toString();
-            if (!java.util.Objects.equals(newCode, confirmCode)) {
+            if (!Objects.equals(newCode, confirmCode)) {
                 Toast.makeText(SettingsActivity.this, "Codes do not match", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -516,8 +593,8 @@ public class SettingsActivity extends BaseLockActivity {
         AlertDialog.Builder oldBuilder = new AlertDialog.Builder(this);
         oldBuilder.setTitle("Current Code");
         oldBuilder.setMessage("Enter your current 6‑digit code to confirm change.");
-        final android.widget.EditText oldInput = new android.widget.EditText(this);
-        oldInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        final EditText oldInput = new EditText(this);
+        oldInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
         oldBuilder.setView(oldInput);
         oldBuilder.setPositiveButton("Confirm", (dialog, which) -> {
             String oldCode = oldInput.getText().toString();

@@ -18,6 +18,8 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:src="@drawable/classic_blue"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
         android:contentDescription="Secure Pass"
         android:layout_marginBottom="16dp"/>
 

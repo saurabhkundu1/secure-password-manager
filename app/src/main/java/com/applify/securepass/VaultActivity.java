@@ -1,6 +1,10 @@
 package com.applify.securepass;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -25,6 +29,8 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 import javax.crypto.SecretKey;
 
 public class VaultActivity extends BaseLockActivity {
@@ -192,7 +198,7 @@ public class VaultActivity extends BaseLockActivity {
             if (!vaultManager.isUnlocked() && userCode != null) {
                 vaultManager.unlock(userCode);
             }
-            allEntries.removeIf(i -> java.util.Objects.equals(i.id, item.id));
+            allEntries.removeIf(i -> Objects.equals(i.id, item.id));
             vaultManager.saveEntries(allEntries);
             loadEntries();
         } catch (Exception e) {
@@ -215,9 +221,9 @@ public class VaultActivity extends BaseLockActivity {
         }
     }
 
-    // ---------- Swipe to delete ----------
+    // ---------- Swipe actions ----------
     private void setupSwipeToDelete() {
-        ItemTouchHelper.SimpleCallback swipeCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+        ItemTouchHelper.SimpleCallback swipeCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView,
                                   @NonNull RecyclerView.ViewHolder viewHolder,
@@ -226,15 +232,58 @@ public class VaultActivity extends BaseLockActivity {
             }
 
             @Override
+            public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+                    View itemView = viewHolder.itemView;
+                    Paint paint = new Paint();
+                    int alpha = (int) (Math.min(Math.abs(dX) / itemView.getWidth(), 1.0f) * 255);
+                    
+                    if (dX > 0) { // Swipe Right
+                        int rightAction = getSharedPreferences("secure_pass_prefs", MODE_PRIVATE).getInt("swipe_right_action", 1);
+                        if (rightAction == 1) {
+                            paint.setColor(Color.argb(alpha, 211, 47, 47)); // Red for Delete
+                        } else if (rightAction == 2) {
+                            paint.setColor(Color.argb(alpha, 255, 179, 0)); // Amber for Favorite
+                        } else {
+                            paint.setColor(Color.TRANSPARENT);
+                        }
+                        c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), paint);
+                    } else if (dX < 0) { // Swipe Left
+                        int leftAction = getSharedPreferences("secure_pass_prefs", MODE_PRIVATE).getInt("swipe_left_action", 2);
+                        if (leftAction == 1) {
+                            paint.setColor(Color.argb(alpha, 211, 47, 47)); // Red for Delete
+                        } else if (leftAction == 2) {
+                            paint.setColor(Color.argb(alpha, 255, 179, 0)); // Amber for Favorite
+                        } else {
+                            paint.setColor(Color.TRANSPARENT);
+                        }
+                        c.drawRect((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom(), paint);
+                    }
+                }
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+            }
+
+            @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
                 VaultItem item = entries.get(position);
-                new AlertDialog.Builder(VaultActivity.this)
-                        .setTitle("Delete")
-                        .setMessage("Delete " + item.website + "?")
-                        .setPositiveButton("Delete", (dialog, which) -> deleteItem(item))
-                        .setNegativeButton("Cancel", (dialog, which) -> adapter.notifyItemChanged(position))
-                        .show();
+                
+                SharedPreferences prefs = getSharedPreferences("secure_pass_prefs", MODE_PRIVATE);
+                int action = (direction == ItemTouchHelper.RIGHT) ? prefs.getInt("swipe_right_action", 1) : prefs.getInt("swipe_left_action", 2);
+                
+                if (action == 1) { // Delete
+                    new AlertDialog.Builder(VaultActivity.this)
+                            .setTitle("Delete")
+                            .setMessage("Delete " + item.website + "?")
+                            .setPositiveButton("Delete", (dialog, which) -> deleteItem(item))
+                            .setNegativeButton("Cancel", (dialog, which) -> adapter.notifyItemChanged(position))
+                            .show();
+                } else if (action == 2) { // Favorite
+                    item.isFavorite = !item.isFavorite;
+                    saveAllAndRefresh();
+                } else { // None
+                    adapter.notifyItemChanged(position);
+                }
             }
         };
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(swipeCallback);
