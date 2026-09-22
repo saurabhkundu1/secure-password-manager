@@ -9,8 +9,7 @@
     android:paddingTop="32dp"
     android:paddingStart="24dp"
     android:paddingEnd="24dp"
-    android:fitsSystemWindows="true"
-    android:background="?android:attr/colorBackground">
+    android:fitsSystemWindows="true">
 
     <!-- App Icon -->
     <ImageView

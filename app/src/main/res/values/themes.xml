@@ -36,11 +36,6 @@
         <item name="android:statusBarColor">@color/palette_red_variant</item>
     </style>
 
-    <style name="Theme.SecurePass.Orange" parent="Theme.SecurePass">
-        <item name="colorPrimary">@color/palette_orange_primary</item>
-        <item name="android:statusBarColor">@color/palette_orange_variant</item>
-    </style>
-
     <style name="Theme.SecurePass.Amber" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_amber_primary</item>
         <item name="android:statusBarColor">@color/palette_amber_variant</item>
