@@ -52,48 +52,33 @@ jobs:
           VERSION="${{ github.ref_name }}"
           APK_NAME="SecurePass-${VERSION}-signed.apk"
           cp ${{ steps.sign_app.outputs.signedReleaseFile }} "${APK_NAME}"
-
           SHA256=$(sha256sum "${APK_NAME}" | awk '{print $1}')
 
-          echo "Cleaning up older GitHub Releases..."
           RELEASES=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/${{ github.repository }}/releases | grep '"id":' | sed -E 's/.*: ([0-9]+).*/\1/')
           for rel_id in $RELEASES; do
-            echo "Deleting old release ID: $rel_id"
             curl -s -X DELETE -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github.v3+json" \
               https://api.github.com/repos/${{ github.repository }}/releases/$rel_id || true
           done
 
-          cat << EOF > RELEASE_NOTES.md
-          # 🔐 Secure Pass ${VERSION}
-
-          ## 🚀 Official Production Release (${VERSION})
-
-          ### 📱 Modern Android
-          - **Theme-Aware UI**: Light, Dark, and System modes with selectable color palettes.
-          - **Custom Swipe Controls**: Swipe gestures in Vault with smooth color gradients.
-          - **Applify F-Droid Repo Integration**: Native F-Droid repository index support.
-
-          ---
-
-          ### 🔒 Core Features
-          - **Offline First**: 100% data privacy with zero internet permissions.
-          - **Military-Grade Encryption**: AES-256-GCM authenticated encryption for vault storage.
-          - **Biometric Authentication**: Hardware-backed fingerprint unlock.
-          - **Encrypted Backup & Restore**: Secure export/import of password vault items.
-
-          ---
-
-          ### 📦 Verified Release Package
-          - **File Name**: \`${APK_NAME}\`
-          - **SHA-256 Checksum**: \`${SHA256}\`
-          - **Minimum Android Version**: Android 8.0 (API 26)
-          - **Target Android Version**: Android 15 (API 35)
-
-          Download the signed \`.apk\` asset below to install directly on your Android device.
-          EOF
+          {
+            echo "# Secure Pass ${VERSION}"
+            echo ""
+            echo "## Official Production Release (${VERSION})"
+            echo ""
+            echo "### Features"
+            echo "- AES-256-GCM encrypted local vault"
+            echo "- 6-digit master code with optional fingerprint unlock"
+            echo "- Clipboard auto-clear, password generator"
+            echo "- Dark/Light/System theme modes"
+            echo ""
+            echo "### Package"
+            echo "- File: \`${APK_NAME}\`"
+            echo "- SHA-256: \`${SHA256}\`"
+            echo "- Min Android: 8.0 (API 26)"
+            echo "- Target Android: 15 (API 35)"
+          } > RELEASE_NOTES.md
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -114,6 +99,7 @@ jobs:
           echo "${{ secrets.SIGNING_KEY }}" | base64 -d > keystore.jks
 
           mkdir -p fdroid_repo/repo
+          mkdir -p fdroid_repo/metadata/com.applify.securepass/en-US/images
 
           SIGNED_APK="${{ steps.sign_app.outputs.signedReleaseFile }}"
           VC=$(aapt dump badging "$SIGNED_APK" | grep versionCode | sed -n "s/.*versionCode='\\([^']*\\)'.*/\\1/p")
@@ -123,40 +109,39 @@ jobs:
 
           cp "$SIGNED_APK" "fdroid_repo/repo/com.applify.securepass_${VC}.apk"
 
-          mkdir -p fdroid_repo/metadata/com.applify.securepass/en-US/images
           cp fastlane/metadata/android/en-US/*.txt fdroid_repo/metadata/com.applify.securepass/en-US/ || true
-          cp app/src/main/res/drawable/classic_blue.png fdroid_repo/metadata/com.applify.securepass/en-US/images/icon.png
-          cp app/src/main/res/drawable/classic_blue.png fdroid_repo/icon.png
+          cp app/src/main/res/drawable/classic_blue.png fdroid_repo/metadata/com.applify.securepass/en-US/images/icon.png || true
+          cp app/src/main/res/drawable/classic_blue.png fdroid_repo/icon.png || true
 
-          cat << EOF | sed 's/^[[:space:]]*//' > fdroid_repo/metadata/com.applify.securepass.yml
-          Categories:
-            - Security
-          License: MIT
-          WebSite: "https://github.com/saurabhkundu1/secure-password-manager"
-          SourceCode: "https://github.com/saurabhkundu1/secure-password-manager"
-          IssueTracker: "https://github.com/saurabhkundu1/secure-password-manager/issues"
-          Name: "Secure Pass"
-          Summary: "Offline Secure Password Manager"
-          Description: |-
-            Secure Password Manager with AES-256-GCM encryption.
-          AutoName: "Secure Pass"
-          CurrentVersion: "${VN}"
-          CurrentVersionCode: ${VC}
-          EOF
+          {
+            echo "Categories:"
+            echo "  - Security"
+            echo "License: MIT"
+            echo "WebSite: \"https://github.com/saurabhkundu1/secure-password-manager\""
+            echo "SourceCode: \"https://github.com/saurabhkundu1/secure-password-manager\""
+            echo "IssueTracker: \"https://github.com/saurabhkundu1/secure-password-manager/issues\""
+            echo "Name: \"Secure Pass\""
+            echo "Summary: \"Offline Secure Password Manager\""
+            echo "Description: |-"
+            echo "  Secure Password Manager with AES-256-GCM encryption."
+            echo "AutoName: \"Secure Pass\""
+            echo "CurrentVersion: \"${VN}\""
+            echo "CurrentVersionCode: ${VC}"
+          } > fdroid_repo/metadata/com.applify.securepass.yml
 
           cd fdroid_repo
-          cat << EOF | sed 's/^[[:space:]]*//' > config.yml
-          repo_name: "Applify"
-          repo_icon: "icon.png"
-          repo_description: "Applify Official F-Droid Repository"
-          repo_url: "https://saurabhkundu1.github.io/Applify/repo"
-          sdk_path: "${ANDROID_HOME}"
-          keystore: "../keystore.jks"
-          repo_keyalias: "${{ secrets.KEY_ALIAS }}"
-          keystorepass: "${{ secrets.KEYSTORE_PASSWORD }}"
-          keypass: "${{ secrets.KEY_PASSWORD }}"
-          archive_older: 0
-          EOF
+          {
+            echo "repo_name: \"Applify\""
+            echo "repo_icon: \"icon.png\""
+            echo "repo_description: \"Applify Official F-Droid Repository\""
+            echo "repo_url: \"https://saurabhkundu1.github.io/Applify/repo\""
+            echo "sdk_path: \"${ANDROID_HOME}\""
+            echo "keystore: \"../keystore.jks\""
+            echo "repo_keyalias: \"${{ secrets.KEY_ALIAS }}\""
+            echo "keystorepass: \"${{ secrets.KEYSTORE_PASSWORD }}\""
+            echo "keypass: \"${{ secrets.KEY_PASSWORD }}\""
+            echo "archive_older: 0"
+          } > config.yml
 
           fdroid update --pretty
           fdroid signindex
@@ -175,7 +160,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "Update F-Droid repo – ${{ github.ref_name }}"
+          git commit -m "Update F-Droid repo ${{ github.ref_name }}"
           git branch -M main
           git remote add origin https://x-access-token:${GH_PAT}@github.com/saurabhkundu1/Applify.git
           git push -f origin main
