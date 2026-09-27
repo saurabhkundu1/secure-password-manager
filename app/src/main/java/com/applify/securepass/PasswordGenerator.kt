@@ -27,7 +27,7 @@ object PasswordGenerator {
 
         val random = SecureRandom()
         val password = StringBuilder(length)
-        for (i in 0 until length) {
+        repeat(length) {
             val index = random.nextInt(pool.length)
             password.append(pool[index])
         }

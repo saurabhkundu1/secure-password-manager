@@ -117,7 +117,7 @@ jobs:
 
           export VN_VAL="$VN"
           export VC_VAL="$VC"
-          cat << 'META_EOF' | envsubst '$VN_VAL $VC_VAL' > fdroid_repo/metadata/com.applify.securepass.yml
+          cat << 'META_EOF' | envsubst '$VN_VAL $VC_VAL' | sed 's/^          //' > fdroid_repo/metadata/com.applify.securepass.yml
           Categories:
             - Security
           License: MIT
@@ -138,7 +138,7 @@ jobs:
           export ALIAS_VAL="${{ secrets.KEY_ALIAS }}"
           export KSPASS_VAL="${{ secrets.KEYSTORE_PASSWORD }}"
           export KPASS_VAL="${{ secrets.KEY_PASSWORD }}"
-          cat << 'CONFIG_EOF' | envsubst '$SDK_PATH $ALIAS_VAL $KSPASS_VAL $KPASS_VAL' > config.yml
+          cat << 'CONFIG_EOF' | envsubst '$SDK_PATH $ALIAS_VAL $KSPASS_VAL $KPASS_VAL' | sed 's/^          //' > config.yml
           repo_name: "Applify"
           repo_icon: "icon.png"
           repo_description: "Applify Official F-Droid Repository"
@@ -150,6 +150,7 @@ jobs:
           keypass: "$KPASS_VAL"
           archive_older: 0
           CONFIG_EOF
+          chmod 0600 config.yml
 
           fdroid update --pretty
           fdroid signindex
