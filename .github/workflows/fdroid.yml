@@ -6,7 +6,7 @@ on:
       - 'v*'
       - 'V*'
   workflow_dispatch:
-  
+
 permissions:
   contents: write
   pages: write
@@ -55,7 +55,6 @@ jobs:
 
           SHA256=$(sha256sum "${APK_NAME}" | awk '{print $1}')
 
-          # Delete all previous GitHub releases to ensure a single clean release
           echo "Cleaning up older GitHub Releases..."
           RELEASES=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
@@ -72,11 +71,9 @@ jobs:
 
           ## 🚀 Official Production Release (${VERSION})
 
-          ### 📱 100% Kotlin & Modern Android
-          - **Complete Kotlin Conversion**: Converted 100% of production and test codebase to idiomatic Kotlin with zero Java remaining.
-          - **Theme-Aware & Dynamic Launcher Icons**: Personalize your home screen launcher icon and internal color palettes dynamically.
-          - **Custom Swipe Controls**: Configurable swipe gestures in Vault (Delete, Favorite, or None) with smooth color gradients.
-          - **Display Cutout & Aspect Ratio Handling**: Automatically adapts to ultra-tall aspect ratios and edge-to-edge display cutouts.
+          ### 📱 Modern Android
+          - **Theme-Aware UI**: Light, Dark, and System modes with selectable color palettes.
+          - **Custom Swipe Controls**: Swipe gestures in Vault with smooth color gradients.
           - **Applify F-Droid Repo Integration**: Native F-Droid repository index support.
 
           ---
@@ -114,7 +111,6 @@ jobs:
           pip3 install --user fdroidserver
           export PATH=$PATH:$HOME/.local/bin
 
-          # Decode the persistent signing keystore OUTSIDE fdroid_repo directory
           echo "${{ secrets.SIGNING_KEY }}" | base64 -d > keystore.jks
 
           mkdir -p fdroid_repo/repo
@@ -125,20 +121,17 @@ jobs:
           if [ -z "$VC" ]; then VC="1"; fi
           if [ -z "$VN" ]; then VN="1.0.0"; fi
 
-          # Copy signed APK with standard F-Droid naming convention
           cp "$SIGNED_APK" "fdroid_repo/repo/com.applify.securepass_${VC}.apk"
 
-          # Add App Icon and Metadata to F-Droid Repo (Outside repo/ directory so it isn't parsed as a fake app)
           mkdir -p fdroid_repo/metadata/com.applify.securepass/en-US/images
           cp fastlane/metadata/android/en-US/*.txt fdroid_repo/metadata/com.applify.securepass/en-US/ || true
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/metadata/com.applify.securepass/en-US/images/icon.png
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/icon.png
 
-          # Explicitly define App Metadata to fix suggestedVersionCode bugs
           cat << EOF | sed 's/^[[:space:]]*//' > fdroid_repo/metadata/com.applify.securepass.yml
           Categories:
             - Security
-          License: Unknown
+          License: MIT
           WebSite: "https://github.com/saurabhkundu1/secure-password-manager"
           SourceCode: "https://github.com/saurabhkundu1/secure-password-manager"
           IssueTracker: "https://github.com/saurabhkundu1/secure-password-manager/issues"
@@ -156,7 +149,7 @@ jobs:
           repo_name: "Applify"
           repo_icon: "icon.png"
           repo_description: "Applify Official F-Droid Repository"
-          repo_url: "repo_url: "https://saurabhkundu1.github.io/Applify/repo""
+          repo_url: "https://saurabhkundu1.github.io/Applify/repo"
           sdk_path: "${ANDROID_HOME}"
           keystore: "../keystore.jks"
           repo_keyalias: "${{ secrets.KEY_ALIAS }}"
@@ -165,17 +158,14 @@ jobs:
           archive_older: 0
           EOF
 
-          # Generate index and sign repository using persistent keystore
-          fdroid update --create-metadata --pretty
+          fdroid update --pretty
           fdroid signindex
 
-          # Copy generated index and apk to root of fdroid_repo so both root URL and /repo URL work
           cp -r repo/* ./
 
-          # CRITICAL: Prevent GitHub Pages Jekyll processing from returning HTTP 404 on raw .apk & .json files
           touch .nojekyll
           touch repo/.nojekyll
-          
+
       - name: Deploy to Applify Repo
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
