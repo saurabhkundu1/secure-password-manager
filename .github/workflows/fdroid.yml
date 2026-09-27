@@ -138,7 +138,7 @@ jobs:
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/icon.png
 
           # Explicitly define App Metadata to fix suggestedVersionCode bugs
-          cat << EOF > fdroid_repo/metadata/com.applify.securepass.yml
+          cat << EOF | sed 's/^[[:space:]]*//' > fdroid_repo/metadata/com.applify.securepass.yml
           Categories:
             - Security
           License: Unknown
