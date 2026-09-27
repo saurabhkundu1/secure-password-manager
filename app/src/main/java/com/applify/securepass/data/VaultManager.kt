@@ -130,7 +130,7 @@ class VaultManager {
                 existing.add(newItem)
             }
         }
-        saveEntries(existing);
+        saveEntries(existing)
     }
 
     // ---------- Salt & File Helpers ----------

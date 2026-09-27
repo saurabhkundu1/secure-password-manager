@@ -4,7 +4,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import java.security.SecureRandom
-import java.util.Arrays
 import java.util.Base64
 
 class TestCrypto {
@@ -18,11 +17,11 @@ class TestCrypto {
             val testPin = "123456"
             val key = CryptoManager.deriveKey(testPin, salt)
 
-            println("Key algorithm: " + key.algorithm)
-            println("Key length: " + key.encoded.size * 8 + " bits")
+            println("Key algorithm: ${key.algorithm}")
+            println("Key length: ${key.encoded.size * 8} bits")
 
             val key2 = CryptoManager.deriveKey(testPin, salt)
-            val same = Arrays.equals(key.encoded, key2.encoded)
+            val same = key.encoded.contentEquals(key2.encoded)
             println("Same key? $same")
 
             assertTrue("Derived keys should be the same for the same input", same)
