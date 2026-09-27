@@ -62,23 +62,23 @@ jobs:
               https://api.github.com/repos/${{ github.repository }}/releases/$rel_id || true
           done
 
-          {
-            echo "# Secure Pass ${VERSION}"
-            echo ""
-            echo "## Official Production Release (${VERSION})"
-            echo ""
-            echo "### Features"
-            echo "- AES-256-GCM encrypted local vault"
-            echo "- 6-digit master code with optional fingerprint unlock"
-            echo "- Clipboard auto-clear, password generator"
-            echo "- Dark/Light/System theme modes"
-            echo ""
-            echo "### Package"
-            echo "- File: \`${APK_NAME}\`"
-            echo "- SHA-256: \`${SHA256}\`"
-            echo "- Min Android: 8.0 (API 26)"
-            echo "- Target Android: 15 (API 35)"
-          } > RELEASE_NOTES.md
+          cat << EOF > RELEASE_NOTES.md
+          # Secure Pass ${VERSION}
+
+          ## Official Production Release (${VERSION})
+
+          ### Features
+          - AES-256-GCM encrypted local vault
+          - 6-digit master code with optional fingerprint unlock
+          - Clipboard auto-clear, password generator
+          - Dark/Light/System theme modes
+
+          ### Package
+          - File: \`${APK_NAME}\`
+          - SHA-256: \`${SHA256}\`
+          - Min Android: 8.0 (API 26)
+          - Target Android: 15 (API 35)
+          EOF
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -113,35 +113,33 @@ jobs:
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/metadata/com.applify.securepass/en-US/images/icon.png || true
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/icon.png || true
 
-          {
-            echo "Categories:"
-            echo "  - Security"
-            echo "License: MIT"
-            echo "WebSite: \"https://github.com/saurabhkundu1/secure-password-manager\""
-            echo "SourceCode: \"https://github.com/saurabhkundu1/secure-password-manager\""
-            echo "IssueTracker: \"https://github.com/saurabhkundu1/secure-password-manager/issues\""
-            echo "Name: \"Secure Pass\""
-            echo "Summary: \"Offline Secure Password Manager\""
-            echo "Description: |-"
-            echo "  Secure Password Manager with AES-256-GCM encryption."
-            echo "AutoName: \"Secure Pass\""
-            echo "CurrentVersion: \"${VN}\""
-            echo "CurrentVersionCode: ${VC}"
-          } > fdroid_repo/metadata/com.applify.securepass.yml
+          cat << 'META_EOF' > fdroid_repo/metadata/com.applify.securepass.yml
+          Categories:
+            - Security
+          License: MIT
+          WebSite: "https://github.com/saurabhkundu1/secure-password-manager"
+          SourceCode: "https://github.com/saurabhkundu1/secure-password-manager"
+          IssueTracker: "https://github.com/saurabhkundu1/secure-password-manager/issues"
+          Name: "Secure Pass"
+          Summary: "Offline Secure Password Manager"
+          Description: |-
+            Secure Password Manager with AES-256-GCM encryption.
+          AutoName: "Secure Pass"
+          META_EOF
 
           cd fdroid_repo
-          {
-            echo "repo_name: \"Applify\""
-            echo "repo_icon: \"icon.png\""
-            echo "repo_description: \"Applify Official F-Droid Repository\""
-            echo "repo_url: \"https://saurabhkundu1.github.io/Applify/repo\""
-            echo "sdk_path: \"${ANDROID_HOME}\""
-            echo "keystore: \"../keystore.jks\""
-            echo "repo_keyalias: \"${{ secrets.KEY_ALIAS }}\""
-            echo "keystorepass: \"${{ secrets.KEYSTORE_PASSWORD }}\""
-            echo "keypass: \"${{ secrets.KEY_PASSWORD }}\""
-            echo "archive_older: 0"
-          } > config.yml
+          cat << 'CONFIG_EOF' > config.yml
+          repo_name: "Applify"
+          repo_icon: "icon.png"
+          repo_description: "Applify Official F-Droid Repository"
+          repo_url: "https://saurabhkundu1.github.io/Applify/repo"
+          sdk_path: "$ANDROID_HOME"
+          keystore: "../keystore.jks"
+          repo_keyalias: "${{ secrets.KEY_ALIAS }}"
+          keystorepass: "${{ secrets.KEYSTORE_PASSWORD }}"
+          keypass: "${{ secrets.KEY_PASSWORD }}"
+          archive_older: 0
+          CONFIG_EOF
 
           fdroid update --pretty
           fdroid signindex
