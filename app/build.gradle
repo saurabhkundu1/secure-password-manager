@@ -4,14 +4,14 @@ plugins {
 
 android {
     namespace 'com.applify.securepass'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.applify.securepass"
         minSdk 26
         targetSdk 35
-        versionCode 4
-        versionName "1.0.0.4"
+        versionCode 1
+        versionName "1.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -52,7 +52,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.google.code.gson:gson:2.14.0'
     implementation 'androidx.biometric:biometric:1.1.0'
     implementation libs.activity.ktx
     implementation libs.appcompat
@@ -61,7 +61,7 @@ dependencies {
     testImplementation libs.junit
     androidTestImplementation libs.espresso.core
     androidTestImplementation libs.ext.junit
-    testImplementation 'androidx.test:core:1.5.0'
-    testImplementation 'androidx.test:runner:1.5.2'
-    testImplementation 'androidx.test:rules:1.5.0'
+    testImplementation 'androidx.test:core:1.7.0'
+    testImplementation 'androidx.test:runner:1.7.0'
+    testImplementation 'androidx.test:rules:1.7.0'
 }

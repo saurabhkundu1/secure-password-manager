@@ -58,23 +58,29 @@ jobs:
 
           SHA256=$(sha256sum "${APK_NAME}" | awk '{print $1}')
 
+          # Delete all previous GitHub releases to ensure a single clean release
+          echo "Cleaning up older GitHub Releases..."
+          RELEASES=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/releases | grep '"id":' | sed -E 's/.*: ([0-9]+).*/\1/')
+          for rel_id in $RELEASES; do
+            echo "Deleting old release ID: $rel_id"
+            curl -s -X DELETE -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/${{ github.repository }}/releases/$rel_id || true
+          done
+
           cat << EOF > RELEASE_NOTES.md
           # 🔐 Secure Pass ${VERSION}
 
-          ## 🌟 Release Highlights (${VERSION})
+          ## 🚀 Official Production Release (${VERSION})
 
-          ### 🎨 Theme-Aware App Icons & Personalization
-          - Added dynamic **Light** and **Dark Mode** icon variants for 5 core color schemes:
-            - **Classic Blue** (\`classic_blue.png\`)
-            - **Crimson Red** (\`crimson_red.png\`)
-            - **Royal Purple** (\`royal_purple.png\`)
-            - **Forest Green** (\`forest_green.png\`)
-            - **Amber Gold** (\`amber_gold.png\`)
-          - In-app color palette selection automatically synchronizes both the UI theme and display icons with system and app night mode settings.
-
-          ### 🐛 F-Droid Repository & Integrity Verification
-          - Implemented persistent keystore signing for the **Applify F-Droid Repository**.
-          - Resolved Droid-ify *"Couldn't verify integrity"* errors by maintaining static index signature keys across CI deployments.
+          ### 📱 100% Kotlin & Modern Android
+          - **Complete Kotlin Conversion**: Converted 100% of production and test codebase to idiomatic Kotlin with zero Java remaining.
+          - **Theme-Aware & Dynamic Launcher Icons**: Personalize your home screen launcher icon and internal color palettes dynamically.
+          - **Custom Swipe Controls**: Configurable swipe gestures in Vault (Delete, Favorite, or None) with smooth color gradients.
+          - **Display Cutout & Aspect Ratio Handling**: Automatically adapts to ultra-tall aspect ratios and edge-to-edge display cutouts.
+          - **Applify F-Droid Repo Integration**: Native F-Droid repository index support.
 
           ---
 
@@ -119,8 +125,8 @@ jobs:
           SIGNED_APK="${{ steps.sign_app.outputs.signedReleaseFile }}"
           VC=$(aapt dump badging "$SIGNED_APK" | grep versionCode | sed -n "s/.*versionCode='\\([^']*\\)'.*/\\1/p")
           VN=$(aapt dump badging "$SIGNED_APK" | grep versionName | sed -n "s/.*versionName='\\([^']*\\)'.*/\\1/p")
-          if [ -z "$VC" ]; then VC="4"; fi
-          if [ -z "$VN" ]; then VN="1.0.0.4"; fi
+          if [ -z "$VC" ]; then VC="1"; fi
+          if [ -z "$VN" ]; then VN="1.0.0"; fi
 
           # Copy signed APK with standard F-Droid naming convention
           cp "$SIGNED_APK" "fdroid_repo/repo/com.applify.securepass_${VC}.apk"

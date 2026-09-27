@@ -2,17 +2,15 @@
 
 All notable changes to the **Secure Pass** project will be documented in this file.
 
-## [1.0.0.4] - 2026-09-14
+## [1.0.0] - 2026-09-22
 
-### Added ✨
-- **Customizable App Icon**: Explicit option added in Settings to select your preferred App Launcher Icon color independently.
-- **Icon Synchronization**: Added a setting to automatically sync the app's internal color palette with your chosen launcher icon color.
-- **Custom Swipe Actions**: You can now define what Swiping Right and Swiping Left does in the Vault! Choose between 'Delete', 'Pin to Top (Favorite)', or 'None' via the Settings menu.
-- **Swipe Visuals**: Added intuitive background color gradients while swiping cards (Red for Delete, Amber for Pin).
-
-### Improved 🎨
-- **Aspect Ratio & Scaling**: Implemented proper dynamic screen ratio parameters (`resizeableActivity`, `max_aspect`) to ensure the app adjusts seamlessly to ultra-tall aspect ratios and varying screen sizes.
-- **Image Aspect Ratios**: Added `fitCenter` to ensure the splash screen icons never distort.
+### Production Release 🚀
+- **100% Kotlin Migration**: Complete codebase conversion from Java to idiomatic Kotlin.
+- **Dynamic Launcher Icons**: Select your preferred App Launcher Icon color independently or sync it automatically with your internal theme palette.
+- **Theme-Aware App Icons**: Dynamic Light and Dark mode icon variants for Classic Blue, Crimson Red, Royal Purple, Forest Green, and Amber Gold.
+- **Custom Swipe Gestures**: Configurable swipe actions in Vault (Delete, Pin to Top/Favorite, or None) with smooth color gradients (Red for Delete, Amber for Pin).
+- **Aspect Ratio & Screen Adaptation**: Implemented dynamic screen ratio parameters (`resizeableActivity`, `max_aspect`, display cutouts) to adapt seamlessly to modern tall and folding screens.
+- **Applify F-Droid Repository Integration**: Native F-Droid repository index support.
 
 ## [1.0.0.3] - 2026-09-14
 
