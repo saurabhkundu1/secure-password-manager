@@ -31,7 +31,7 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
-      - name: Install Android Build Tools (29.0.3 & 34.0.0)
+      - name: Install Android Build Tools
         run: |
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;29.0.3"
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0"
@@ -62,10 +62,10 @@ jobs:
               https://api.github.com/repos/${{ github.repository }}/releases/$rel_id || true
           done
 
-          cat << EOF > RELEASE_NOTES.md
-          # Secure Pass ${VERSION}
+          cat << 'EOF' > RELEASE_NOTES.md
+          # Secure Pass RELEASE_VERSION
 
-          ## Official Production Release (${VERSION})
+          ## Official Production Release
 
           ### Features
           - AES-256-GCM encrypted local vault
@@ -74,11 +74,14 @@ jobs:
           - Dark/Light/System theme modes
 
           ### Package
-          - File: \`${APK_NAME}\`
-          - SHA-256: \`${SHA256}\`
+          - File: RELEASE_FILE
+          - SHA-256: RELEASE_SHA
           - Min Android: 8.0 (API 26)
           - Target Android: 15 (API 35)
           EOF
+          sed -i "s|RELEASE_VERSION|${VERSION}|g" RELEASE_NOTES.md
+          sed -i "s|RELEASE_FILE|${APK_NAME}|g" RELEASE_NOTES.md
+          sed -i "s|RELEASE_SHA|${SHA256}|g" RELEASE_NOTES.md
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -92,7 +95,7 @@ jobs:
 
       - name: Build F-Droid Repository
         run: |
-          sudo apt-get update && sudo apt-get install -y aapt python3-pip python3-setuptools libjpeg-dev zlib1g-dev
+          sudo apt-get update && sudo apt-get install -y aapt python3-pip python3-setuptools libjpeg-dev zlib1g-dev gettext
           pip3 install --user fdroidserver
           export PATH=$PATH:$HOME/.local/bin
 
@@ -108,12 +111,13 @@ jobs:
           if [ -z "$VN" ]; then VN="1.0.0"; fi
 
           cp "$SIGNED_APK" "fdroid_repo/repo/com.applify.securepass_${VC}.apk"
-
           cp fastlane/metadata/android/en-US/*.txt fdroid_repo/metadata/com.applify.securepass/en-US/ || true
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/metadata/com.applify.securepass/en-US/images/icon.png || true
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/icon.png || true
 
-          cat << 'META_EOF' > fdroid_repo/metadata/com.applify.securepass.yml
+          export VN_VAL="$VN"
+          export VC_VAL="$VC"
+          cat << 'META_EOF' | envsubst '$VN_VAL $VC_VAL' > fdroid_repo/metadata/com.applify.securepass.yml
           Categories:
             - Security
           License: MIT
@@ -125,19 +129,25 @@ jobs:
           Description: |-
             Secure Password Manager with AES-256-GCM encryption.
           AutoName: "Secure Pass"
+          CurrentVersion: "$VN_VAL"
+          CurrentVersionCode: $VC_VAL
           META_EOF
 
           cd fdroid_repo
-          cat << 'CONFIG_EOF' > config.yml
+          export SDK_PATH="$ANDROID_HOME"
+          export ALIAS_VAL="${{ secrets.KEY_ALIAS }}"
+          export KSPASS_VAL="${{ secrets.KEYSTORE_PASSWORD }}"
+          export KPASS_VAL="${{ secrets.KEY_PASSWORD }}"
+          cat << 'CONFIG_EOF' | envsubst '$SDK_PATH $ALIAS_VAL $KSPASS_VAL $KPASS_VAL' > config.yml
           repo_name: "Applify"
           repo_icon: "icon.png"
           repo_description: "Applify Official F-Droid Repository"
           repo_url: "https://saurabhkundu1.github.io/Applify/repo"
-          sdk_path: "$ANDROID_HOME"
+          sdk_path: "$SDK_PATH"
           keystore: "../keystore.jks"
-          repo_keyalias: "${{ secrets.KEY_ALIAS }}"
-          keystorepass: "${{ secrets.KEYSTORE_PASSWORD }}"
-          keypass: "${{ secrets.KEY_PASSWORD }}"
+          repo_keyalias: "$ALIAS_VAL"
+          keystorepass: "$KSPASS_VAL"
+          keypass: "$KPASS_VAL"
           archive_older: 0
           CONFIG_EOF
 
@@ -145,7 +155,6 @@ jobs:
           fdroid signindex
 
           cp -r repo/* ./
-
           touch .nojekyll
           touch repo/.nojekyll
 
