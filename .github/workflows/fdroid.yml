@@ -117,41 +117,55 @@ jobs:
 
           export VN_VAL="$VN"
           export VC_VAL="$VC"
-          cat << 'META_EOF' | envsubst '$VN_VAL $VC_VAL' | sed 's/^          //' > fdroid_repo/metadata/com.applify.securepass.yml
-          Categories:
+          python3 -c "
+          import os
+          vn = os.environ.get('VN_VAL', '1.0.0')
+          vc = os.environ.get('VC_VAL', '1')
+          content = f'''Categories:
             - Security
           License: MIT
-          WebSite: "https://github.com/saurabhkundu1/secure-password-manager"
-          SourceCode: "https://github.com/saurabhkundu1/secure-password-manager"
-          IssueTracker: "https://github.com/saurabhkundu1/secure-password-manager/issues"
-          Name: "Secure Pass"
-          Summary: "Offline Secure Password Manager"
+          WebSite: \"https://github.com/saurabhkundu1/secure-password-manager\"
+          SourceCode: \"https://github.com/saurabhkundu1/secure-password-manager\"
+          IssueTracker: \"https://github.com/saurabhkundu1/secure-password-manager/issues\"
+          Name: \"Secure Pass\"
+          Summary: \"Offline Secure Password Manager\"
           Description: |-
             Secure Password Manager with AES-256-GCM encryption.
-          AutoName: "Secure Pass"
-          CurrentVersion: "$VN_VAL"
-          CurrentVersionCode: $VC_VAL
-          META_EOF
+          AutoName: \"Secure Pass\"
+          CurrentVersion: \"{vn}\"
+          CurrentVersionCode: {vc}
+          '''
+          with open('fdroid_repo/metadata/com.applify.securepass.yml', 'w') as f:
+              f.write(content)
+          "
 
-          cd fdroid_repo
           export SDK_PATH="$ANDROID_HOME"
           export ALIAS_VAL="${{ secrets.KEY_ALIAS }}"
           export KSPASS_VAL="${{ secrets.KEYSTORE_PASSWORD }}"
           export KPASS_VAL="${{ secrets.KEY_PASSWORD }}"
-          cat << 'CONFIG_EOF' | envsubst '$SDK_PATH $ALIAS_VAL $KSPASS_VAL $KPASS_VAL' | sed 's/^          //' > config.yml
-          repo_name: "Applify"
-          repo_icon: "icon.png"
-          repo_description: "Applify Official F-Droid Repository"
-          repo_url: "https://saurabhkundu1.github.io/Applify/repo"
-          sdk_path: "$SDK_PATH"
-          keystore: "../keystore.jks"
-          repo_keyalias: "$ALIAS_VAL"
-          keystorepass: "$KSPASS_VAL"
-          keypass: "$KPASS_VAL"
+          python3 -c "
+          import os
+          sdk = os.environ.get('SDK_PATH', '')
+          alias = os.environ.get('ALIAS_VAL', '')
+          kspass = os.environ.get('KSPASS_VAL', '')
+          kpass = os.environ.get('KPASS_VAL', '')
+          content = f'''repo_name: \"Applify\"
+          repo_icon: \"icon.png\"
+          repo_description: \"Applify Official F-Droid Repository\"
+          repo_url: \"https://saurabhkundu1.github.io/Applify/repo\"
+          sdk_path: \"{sdk}\"
+          keystore: \"../keystore.jks\"
+          repo_keyalias: \"{alias}\"
+          keystorepass: \"{kspass}\"
+          keypass: \"{kpass}\"
           archive_older: 0
-          CONFIG_EOF
-          chmod 0600 config.yml
+          '''
+          with open('fdroid_repo/config.yml', 'w') as f:
+              f.write(content)
+          os.chmod('fdroid_repo/config.yml', 0o600)
+          "
 
+          cd fdroid_repo
           fdroid update --pretty
           fdroid signindex
 
