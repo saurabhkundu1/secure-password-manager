@@ -159,7 +159,7 @@ jobs:
           repo_name: "Applify"
           repo_icon: "icon.png"
           repo_description: "Applify Official F-Droid Repository"
-          repo_url: "https://saurabhkundu1.github.io/secure-password-manager/repo"
+          repo_url: "repo_url: "https://saurabhkundu1.github.io/Applify/repo""
           sdk_path: "${ANDROID_HOME}"
           keystore: "../keystore.jks"
           repo_keyalias: "${{ secrets.KEY_ALIAS }}"
@@ -178,11 +178,17 @@ jobs:
           # CRITICAL: Prevent GitHub Pages Jekyll processing from returning HTTP 404 on raw .apk & .json files
           touch .nojekyll
           touch repo/.nojekyll
-
-      - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './fdroid_repo'
-
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
+          
+      - name: Deploy to Applify Repo
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          cd fdroid_repo
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update F-Droid repo – ${{ github.ref_name }}"
+          git branch -M main
+          git remote add origin https://x-access-token:${GH_PAT}@github.com/saurabhkundu1/Applify.git
+          git push -f origin main
