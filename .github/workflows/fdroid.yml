@@ -155,7 +155,7 @@ jobs:
           EOF
 
           cd fdroid_repo
-          cat << EOF > config.yml
+          cat << EOF | sed 's/^[[:space:]]*//' > config.yml
           repo_name: "Applify"
           repo_icon: "icon.png"
           repo_description: "Applify Official F-Droid Repository"
