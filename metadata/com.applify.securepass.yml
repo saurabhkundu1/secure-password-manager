@@ -1,0 +1,13 @@
+Categories:
+  - Security
+License: MIT
+WebSite: "https://github.com/saurabhkundu1/secure-password-manager"
+SourceCode: "https://github.com/saurabhkundu1/secure-password-manager"
+IssueTracker: "https://github.com/saurabhkundu1/secure-password-manager/issues"
+Name: "Secure Pass"
+Summary: "Offline Secure Password Manager"
+Description: |-
+  Secure Password Manager with AES-256-GCM encryption.
+AutoName: "Secure Pass"
+CurrentVersion: "1.0.0"
+CurrentVersionCode: 1

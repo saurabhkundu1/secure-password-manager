@@ -117,54 +117,60 @@ jobs:
 
           export VN_VAL="$VN"
           export VC_VAL="$VC"
-          python3 -c "
-          import os, textwrap
+          python3 - << 'PYEOF'
+          import os
+
           vn = os.environ.get('VN_VAL', '1.0.0')
           vc = os.environ.get('VC_VAL', '1')
-          content = textwrap.dedent(f'''\\
-          Categories:
-            - Security
-          License: MIT
-          WebSite: \"https://github.com/saurabhkundu1/secure-password-manager\"
-          SourceCode: \"https://github.com/saurabhkundu1/secure-password-manager\"
-          IssueTracker: \"https://github.com/saurabhkundu1/secure-password-manager/issues\"
-          Name: \"Secure Pass\"
-          Summary: \"Offline Secure Password Manager\"
-          Description: |-
-            Secure Password Manager with AES-256-GCM encryption.
-          AutoName: \"Secure Pass\"
-          CurrentVersion: \"{vn}\"
-          CurrentVersionCode: {vc}
-          ''')
+
+          lines = [
+              "Categories:",
+              "  - Security",
+              "License: MIT",
+              'WebSite: "https://github.com/saurabhkundu1/secure-password-manager"',
+              'SourceCode: "https://github.com/saurabhkundu1/secure-password-manager"',
+              'IssueTracker: "https://github.com/saurabhkundu1/secure-password-manager/issues"',
+              'Name: "Secure Pass"',
+              'Summary: "Offline Secure Password Manager"',
+              "Description: |-",
+              "  Secure Password Manager with AES-256-GCM encryption.",
+              'AutoName: "Secure Pass"',
+              f'CurrentVersion: "{vn}"',
+              f'CurrentVersionCode: {vc}'
+          ]
+
           with open('fdroid_repo/metadata/com.applify.securepass.yml', 'w') as f:
-              f.write(content)
-          "
+              f.write('\n'.join(lines) + '\n')
+          PYEOF
 
           export SDK_PATH="$ANDROID_HOME"
           export ALIAS_VAL="${{ secrets.KEY_ALIAS }}"
           export KSPASS_VAL="${{ secrets.KEYSTORE_PASSWORD }}"
           export KPASS_VAL="${{ secrets.KEY_PASSWORD }}"
-          python3 -c "
-          import os, textwrap
+          python3 - << 'PYEOF'
+          import os
+
           sdk = os.environ.get('SDK_PATH', '')
           alias = os.environ.get('ALIAS_VAL', '')
           kspass = os.environ.get('KSPASS_VAL', '')
           kpass = os.environ.get('KPASS_VAL', '')
-          content = textwrap.dedent(f'''\\
-          repo_name: \"Applify\"
-          repo_icon: \"icon.png\"
-          repo_description: \"Applify Official F-Droid Repository\"
-          repo_url: \"https://saurabhkundu1.github.io/Applify/repo\"
-          sdk_path: \"{sdk}\"
-          keystore: \"../keystore.jks\"
-          repo_keyalias: \"{alias}\"
-          keystorepass: \"{kspass}\"
-          keypass: \"{kpass}\"
-          archive_older: 0
-          ''')
+
+          lines = [
+              'repo_name: "Applify"',
+              'repo_icon: "icon.png"',
+              'repo_description: "Applify Official F-Droid Repository"',
+              'repo_url: "https://saurabhkundu1.github.io/Applify/repo"',
+              f'sdk_path: "{sdk}"',
+              'keystore: "../keystore.jks"',
+              f'repo_keyalias: "{alias}"',
+              f'keystorepass: "{kspass}"',
+              f'keypass: "{kpass}"',
+              'archive_older: 0'
+          ]
+
           with open('fdroid_repo/config.yml', 'w') as f:
-              f.write(content)
-          "
+              f.write('\n'.join(lines) + '\n')
+          PYEOF
 
           cd fdroid_repo
           chmod 0600 config.yml
