@@ -118,10 +118,11 @@ jobs:
           export VN_VAL="$VN"
           export VC_VAL="$VC"
           python3 -c "
-          import os
+          import os, textwrap
           vn = os.environ.get('VN_VAL', '1.0.0')
           vc = os.environ.get('VC_VAL', '1')
-          content = f'''Categories:
+          content = textwrap.dedent(f'''\\
+          Categories:
             - Security
           License: MIT
           WebSite: \"https://github.com/saurabhkundu1/secure-password-manager\"
@@ -134,7 +135,7 @@ jobs:
           AutoName: \"Secure Pass\"
           CurrentVersion: \"{vn}\"
           CurrentVersionCode: {vc}
-          '''
+          ''')
           with open('fdroid_repo/metadata/com.applify.securepass.yml', 'w') as f:
               f.write(content)
           "
@@ -144,12 +145,13 @@ jobs:
           export KSPASS_VAL="${{ secrets.KEYSTORE_PASSWORD }}"
           export KPASS_VAL="${{ secrets.KEY_PASSWORD }}"
           python3 -c "
-          import os
+          import os, textwrap
           sdk = os.environ.get('SDK_PATH', '')
           alias = os.environ.get('ALIAS_VAL', '')
           kspass = os.environ.get('KSPASS_VAL', '')
           kpass = os.environ.get('KPASS_VAL', '')
-          content = f'''repo_name: \"Applify\"
+          content = textwrap.dedent(f'''\\
+          repo_name: \"Applify\"
           repo_icon: \"icon.png\"
           repo_description: \"Applify Official F-Droid Repository\"
           repo_url: \"https://saurabhkundu1.github.io/Applify/repo\"
@@ -159,13 +161,13 @@ jobs:
           keystorepass: \"{kspass}\"
           keypass: \"{kpass}\"
           archive_older: 0
-          '''
+          ''')
           with open('fdroid_repo/config.yml', 'w') as f:
               f.write(content)
-          os.chmod('fdroid_repo/config.yml', 0o600)
           "
 
           cd fdroid_repo
+          chmod 0600 config.yml
           fdroid update --pretty
           fdroid signindex
 
