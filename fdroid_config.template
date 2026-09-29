@@ -1,0 +1,10 @@
+repo_name: "Applify"
+repo_icon: "icon.png"
+repo_description: "Applify Official F-Droid Repository"
+repo_url: "https://saurabhkundu1.github.io/Applify/repo"
+sdk_path: "SDK_PATH_PLACEHOLDER"
+keystore: "../keystore.jks"
+repo_keyalias: "KEY_ALIAS_PLACEHOLDER"
+keystorepass: "KEYSTORE_PASS_PLACEHOLDER"
+keypass: "KEY_PASS_PLACEHOLDER"
+archive_older: 0

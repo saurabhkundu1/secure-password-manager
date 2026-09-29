@@ -2,6 +2,7 @@ name: Publish F-Droid Repository & GitHub Release
 
 on:
   push:
+    branches: [ main, master ]
     tags:
       - 'v*'
       - 'V*'
@@ -115,62 +116,17 @@ jobs:
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/metadata/com.applify.securepass/en-US/images/icon.png || true
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/icon.png || true
 
-          export VN_VAL="$VN"
-          export VC_VAL="$VC"
-          python3 - << 'PYEOF'
-          import os
+          # Copy static metadata template and inject version info
+          cp metadata/com.applify.securepass.yml fdroid_repo/metadata/com.applify.securepass.yml
+          sed -i "s|CurrentVersion: .*|CurrentVersion: \"${VN}\"|" fdroid_repo/metadata/com.applify.securepass.yml
+          sed -i "s|CurrentVersionCode: .*|CurrentVersionCode: ${VC}|" fdroid_repo/metadata/com.applify.securepass.yml
 
-          vn = os.environ.get('VN_VAL', '1.0.0')
-          vc = os.environ.get('VC_VAL', '1')
-
-          lines = [
-              "Categories:",
-              "  - Security",
-              "License: MIT",
-              'WebSite: "https://github.com/saurabhkundu1/secure-password-manager"',
-              'SourceCode: "https://github.com/saurabhkundu1/secure-password-manager"',
-              'IssueTracker: "https://github.com/saurabhkundu1/secure-password-manager/issues"',
-              'Name: "Secure Pass"',
-              'Summary: "Offline Secure Password Manager"',
-              "Description: |-",
-              "  Secure Password Manager with AES-256-GCM encryption.",
-              'AutoName: "Secure Pass"',
-              f'CurrentVersion: "{vn}"',
-              f'CurrentVersionCode: {vc}'
-          ]
-
-          with open('fdroid_repo/metadata/com.applify.securepass.yml', 'w') as f:
-              f.write('\n'.join(lines) + '\n')
-          PYEOF
-
-          export SDK_PATH="$ANDROID_HOME"
-          export ALIAS_VAL="${{ secrets.KEY_ALIAS }}"
-          export KSPASS_VAL="${{ secrets.KEYSTORE_PASSWORD }}"
-          export KPASS_VAL="${{ secrets.KEY_PASSWORD }}"
-          python3 - << 'PYEOF'
-          import os
-
-          sdk = os.environ.get('SDK_PATH', '')
-          alias = os.environ.get('ALIAS_VAL', '')
-          kspass = os.environ.get('KSPASS_VAL', '')
-          kpass = os.environ.get('KPASS_VAL', '')
-
-          lines = [
-              'repo_name: "Applify"',
-              'repo_icon: "icon.png"',
-              'repo_description: "Applify Official F-Droid Repository"',
-              'repo_url: "https://saurabhkundu1.github.io/Applify/repo"',
-              f'sdk_path: "{sdk}"',
-              'keystore: "../keystore.jks"',
-              f'repo_keyalias: "{alias}"',
-              f'keystorepass: "{kspass}"',
-              f'keypass: "{kpass}"',
-              'archive_older: 0'
-          ]
-
-          with open('fdroid_repo/config.yml', 'w') as f:
-              f.write('\n'.join(lines) + '\n')
-          PYEOF
+          # Copy static config template and inject parameters
+          cp fdroid_config.template fdroid_repo/config.yml
+          sed -i "s|SDK_PATH_PLACEHOLDER|${ANDROID_HOME}|" fdroid_repo/config.yml
+          sed -i "s|KEY_ALIAS_PLACEHOLDER|${{ secrets.KEY_ALIAS }}|" fdroid_repo/config.yml
+          sed -i "s|KEYSTORE_PASS_PLACEHOLDER|${{ secrets.KEYSTORE_PASSWORD }}|" fdroid_repo/config.yml
+          sed -i "s|KEY_PASS_PLACEHOLDER|${{ secrets.KEY_PASSWORD }}|" fdroid_repo/config.yml
 
           cd fdroid_repo
           chmod 0600 config.yml
