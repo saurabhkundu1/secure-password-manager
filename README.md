@@ -70,7 +70,7 @@ Contributions are welcome! Feel free to open issues or submit pull requests on t
 
 - **Report Bugs**: [GitHub Issues](https://github.com/saurabhkundu1/secure-password-manager/issues)
 - **Request Features**: [GitHub Discussions](https://github.com/saurabhkundu1/secure-password-manager/discussions)
-- **Email**: [saurabhkundu1@example.com](mailto:saurabhkundu1@example.com) *(Optional)*
+- **Email**: [saurabhkundu1@protonmail.com](mailto:saurabhkundu1@protonmail.com) *(Optional)*
 
 ---
 
