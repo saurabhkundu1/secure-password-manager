@@ -13,6 +13,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import com.applify.securepass.data.VaultManager
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
@@ -177,6 +178,8 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     if (code == pendingCode) {
                         vaultManager.setupNewVault(code)
+                        // Reset 24-hour master code timer upon setup
+                        prefs.edit { putLong("last_code_time", System.currentTimeMillis()) }
                         isSetupMode = false
                         tvInstruction.text = "Vault created! Now unlock."
                         pendingCode = ""
@@ -194,6 +197,8 @@ class MainActivity : AppCompatActivity() {
                 }
             } else {
                 vaultManager.unlock(code)
+                // Automatically reset the 24-hour master code timer when entered successfully
+                prefs.edit { putLong("last_code_time", System.currentTimeMillis()) }
                 val intent = Intent(this@MainActivity, VaultActivity::class.java)
                 intent.putExtra("USER_CODE", code)
                 startActivity(intent)
@@ -211,12 +216,20 @@ class MainActivity : AppCompatActivity() {
         val biometricEnabled = prefs.getBoolean("fingerprint_enabled", false)
         val encryptedKey = prefs.getString("encrypted_vault_key", null)
         val lastCodeTime = prefs.getLong("last_code_time", 0)
-        val isExpired = (System.currentTimeMillis() - lastCodeTime) > (24 * 60 * 60 * 1000L)
+        val currentTime = System.currentTimeMillis()
+        val TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000L
+        val isExpired = (currentTime - lastCodeTime) > TWENTY_FOUR_HOURS_MS
 
-        if (biometricEnabled && encryptedKey != null && !isExpired) {
-            btnBiometric?.visibility = View.VISIBLE
-            btnBiometric?.setOnClickListener { triggerBiometricUnlock(encryptedKey) }
-            triggerBiometricUnlock(encryptedKey)
+        if (biometricEnabled && encryptedKey != null) {
+            if (isExpired) {
+                // 24-hour window expired -> require master code entry & auto-reset timer on successful entry
+                btnBiometric?.visibility = View.GONE
+                tvInstruction.text = "24h policy: Please enter 6-digit master code"
+            } else {
+                btnBiometric?.visibility = View.VISIBLE
+                btnBiometric?.setOnClickListener { triggerBiometricUnlock(encryptedKey) }
+                triggerBiometricUnlock(encryptedKey)
+            }
         }
     }
 

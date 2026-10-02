@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatDelegate
 
 object ThemeHelper {
     private const val KEY_THEME_MODE = "theme_mode" // 0=light, 1=dark, 2=system
-    private const val KEY_COLOR_PALETTE = "color_palette" // 0=teal, 1=blue, 2=green, 3=purple, 4=red
+    private const val KEY_COLOR_PALETTE = "color_palette" // 0=teal, 1=blue, 2=green, 3=purple, 4=red, 5=amber, ...
 
     /**
      * Applies the saved theme mode (light/dark/system) and color palette to the activity.
@@ -60,7 +60,6 @@ object ThemeHelper {
 
     /**
      * Returns the matching theme icon drawable resource ID for the active color palette.
-     * The theme icons automatically switch between light and dark mode variants via res/drawable and res/drawable-night.
      */
     @JvmStatic
     fun getThemeIconResId(palette: Int): Int {
@@ -85,21 +84,21 @@ object ThemeHelper {
     }
 
     /**
-     * Dynamically changes the app launcher icon based on the selected palette.
+     * Dynamically changes the app launcher icon based on the selected palette index or icon index.
      */
     @JvmStatic
-    fun updateAppIcon(context: Context, palette: Int) {
+    fun updateAppIcon(context: Context, iconIndex: Int) {
         val pm = context.packageManager
         val pkg = context.packageName
 
-        // Map palette index to alias name
-        val activeAlias = when (palette) {
+        // Map icon index to launcher activity alias name
+        val activeAlias = when (iconIndex) {
             1 -> "$pkg.MainActivityBlue"
             2 -> "$pkg.MainActivityGreen"
             3 -> "$pkg.MainActivityPurple"
             4 -> "$pkg.MainActivityRed"
             5 -> "$pkg.MainActivityAmber"
-            else -> "$pkg.MainActivityBlue"
+            else -> "$pkg.MainActivityBlue" // Default alias
         }
 
         val allAliases = arrayOf(
@@ -125,7 +124,6 @@ object ThemeHelper {
         }
     }
 
-    // Deprecated but kept for compatibility if needed elsewhere temporarily
     @JvmStatic
     fun applyThemeFromPreferences(prefs: SharedPreferences) {
         val mode = prefs.getInt(KEY_THEME_MODE, 2)

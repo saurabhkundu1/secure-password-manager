@@ -15,6 +15,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.GridLayout
+import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.Spinner
@@ -38,7 +39,6 @@ import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
 import java.util.Base64
 import java.util.Objects
-import javax.crypto.SecretKey
 
 class SettingsActivity : BaseLockActivity() {
 
@@ -167,13 +167,10 @@ class SettingsActivity : BaseLockActivity() {
                 else -> 2 // system
             }
             prefs.edit { putInt(KEY_THEME_MODE, mode) }
-            // Apply theme change immediately
             ThemeHelper.applyThemeMode(mode)
-            // Restart activity to refresh colors fully
             recreate()
         }
 
-        // Build color palette buttons
         buildColorPalette()
 
         btnChangeCode.setOnClickListener { showChangeCodeDialog() }
@@ -205,7 +202,7 @@ class SettingsActivity : BaseLockActivity() {
     }
 
     private fun restoreThemeSettings() {
-        val themeMode = prefs.getInt(KEY_THEME_MODE, 2) // default system
+        val themeMode = prefs.getInt(KEY_THEME_MODE, 2)
         when (themeMode) {
             0 -> rbLight.isChecked = true
             1 -> rbDark.isChecked = true
@@ -247,14 +244,15 @@ class SettingsActivity : BaseLockActivity() {
 
         switchSyncIcon.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit { putBoolean("sync_icon_palette", isChecked) }
+            val currentPalette = prefs.getInt(KEY_COLOR_PALETTE, 0)
             if (isChecked) {
-                // Instantly sync
-                val currentPalette = prefs.getInt(KEY_COLOR_PALETTE, 0)
                 ThemeHelper.updateAppIcon(this, currentPalette)
+            } else {
+                val customIcon = prefs.getInt("custom_app_icon", 0)
+                ThemeHelper.updateAppIcon(this, customIcon)
             }
         }
 
-        // App Icon Selector (Independent if sync is off)
         val iconOptions = arrayOf("Teal (Default)", "Classic Blue", "Forest Green", "Royal Purple", "Crimson Red", "Amber Gold")
         val iconAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, iconOptions)
         iconAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -273,15 +271,24 @@ class SettingsActivity : BaseLockActivity() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        // Swipe Options
-        val swipeOptions = arrayOf("None", "Delete", "Pin to Top / Favorite")
+        // Swipe Options with distinct color trail indicators (8 Actions)
+        val swipeOptions = arrayOf(
+            "None",
+            "Delete (Red)",
+            "Pin / Favorite (Amber)",
+            "Copy Password (Blue)",
+            "Copy Username (Green)",
+            "Edit Entry (Purple)",
+            "Copy Notes (Cyan)",
+            "Share Credential (Indigo)",
+            "View Details (Teal)"
+        )
         val swipeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, swipeOptions)
         swipeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
 
         spinnerSwipeRight.adapter = swipeAdapter
         spinnerSwipeLeft.adapter = swipeAdapter
 
-        // Right defaults to Delete (1), Left defaults to Favorite (2)
         spinnerSwipeRight.setSelection(prefs.getInt("swipe_right_action", 1))
         spinnerSwipeLeft.setSelection(prefs.getInt("swipe_left_action", 2))
 
@@ -304,10 +311,9 @@ class SettingsActivity : BaseLockActivity() {
 
     private fun buildColorPalette() {
         llColorPalette.removeAllViews()
-        val currentPalette = prefs.getInt(KEY_COLOR_PALETTE, 0) // default teal
+        val currentPalette = prefs.getInt(KEY_COLOR_PALETTE, 0)
 
         for (i in PALETTE_COLORS.indices) {
-            val index = i
             val colorCircle = View(this)
             val size = resources.getDimension(androidx.appcompat.R.dimen.abc_action_bar_default_height_material).toInt() / 2
             val params = GridLayout.LayoutParams()
@@ -318,275 +324,197 @@ class SettingsActivity : BaseLockActivity() {
             colorCircle.setBackgroundColor(PALETTE_COLORS[i])
             if (i == currentPalette) {
                 colorCircle.setBackgroundResource(androidx.appcompat.R.drawable.abc_btn_colored_material)
-                colorCircle.alpha = 1.0f
-            } else {
-                colorCircle.alpha = 0.5f
             }
 
             colorCircle.setOnClickListener {
-                val isSync = prefs.getBoolean("sync_icon_palette", true)
-                prefs.edit {
-                    putInt(KEY_COLOR_PALETTE, index)
-                    if (isSync) {
-                        putInt("custom_app_icon", index)
-                    }
+                prefs.edit { putInt(KEY_COLOR_PALETTE, i) }
+                ThemeHelper.applyTheme(this@SettingsActivity)
+                if (prefs.getBoolean("sync_icon_palette", true)) {
+                    ThemeHelper.updateAppIcon(this@SettingsActivity, i)
                 }
-                if (isSync) {
-                    ThemeHelper.updateAppIcon(this, index)
-                }
-                buildColorPalette()
                 recreate()
             }
             llColorPalette.addView(colorCircle)
         }
     }
 
-    // ---------- Backup & Restore Logic ----------
-
-    private var tempBackupPassword: String? = null
-
-    private fun promptBackupPassword() {
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Set Backup Password")
+    private fun showMasterCodePrompt(actionName: String, onValidCode: () -> Unit) {
         val input = EditText(this)
-        input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        builder.setView(input)
-        builder.setPositiveButton("Continue") { _, _ ->
-            tempBackupPassword = input.text.toString()
-            createDocumentLauncher.launch("secure_pass_backup.txt")
-        }
-        builder.setNegativeButton("Cancel", null)
-        builder.show()
-    }
+        input.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
 
-    private fun onBackupFileCreated(uri: Uri?) {
-        val pass = tempBackupPassword
-        if (uri == null || pass == null) return
-        try {
-            // 1. Prepare data
-            val entries = vaultManager.loadEntries()
-            val json = Gson().toJson(entries)
-
-            // 2. Encrypt
-            val salt = ByteArray(16)
-            SecureRandom().nextBytes(salt)
-            val key = CryptoManager.deriveKey(pass, salt)
-
-            val encryptedIVData = CryptoManager.encrypt(json, key)
-            val ivData = Base64.getDecoder().decode(encryptedIVData)
-
-            // 3. Combine: salt + IV + ciphertext
-            val buffer = ByteBuffer.allocate(salt.size + ivData.size)
-            buffer.put(salt)
-            buffer.put(ivData)
-
-            val finalBase64 = Base64.getEncoder().encodeToString(buffer.array())
-
-            // 4. Write to file
-            contentResolver.openOutputStream(uri)?.use { os ->
-                os.write(finalBase64.toByteArray(StandardCharsets.UTF_8))
-            }
-            Toast.makeText(this, "Backup exported successfully", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Log.e(TAG, "Export failed", e)
-            Toast.makeText(this, "Export failed: " + e.message, Toast.LENGTH_LONG).show()
-        } finally {
-            tempBackupPassword = null
-        }
-    }
-
-    private fun onBackupFileOpened(uri: Uri?) {
-        if (uri == null) return
-        getPassword { password -> handleImport(uri, password) }
-    }
-
-    private fun interface PasswordCallback {
-        fun onPassword(password: String)
-    }
-
-    private fun getPassword(callback: PasswordCallback) {
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Enter Backup Password")
-        val input = EditText(this)
-        input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        builder.setView(input)
-        builder.setPositiveButton("OK") { _, _ -> callback.onPassword(input.text.toString()) }
-        builder.setNegativeButton("Cancel", null)
-        builder.show()
-    }
-
-    private fun handleImport(uri: Uri, password: String) {
-        try {
-            // 1. Read file
-            val fileBytes: ByteArray
-            contentResolver.openInputStream(uri).use { isStream ->
-                if (isStream == null) throw Exception("Could not open file")
-                val size = isStream.available()
-                val encodedBytes = ByteArray(size)
-                val read = isStream.read(encodedBytes)
-                if (read <= 0) throw Exception("File is empty or could not be read")
-                fileBytes = Base64.getDecoder().decode(String(encodedBytes, StandardCharsets.UTF_8))
-            }
-
-            // 2. Extract salt and data
-            val buffer = ByteBuffer.wrap(fileBytes)
-            val salt = ByteArray(16)
-            buffer.get(salt)
-            val ivData = ByteArray(buffer.remaining())
-            buffer.get(ivData)
-
-            // 3. Decrypt
-            val key = CryptoManager.deriveKey(password, salt)
-            val encryptedIVData = Base64.getEncoder().encodeToString(ivData)
-            val json = CryptoManager.decrypt(encryptedIVData, key)
-
-            // 4. Parse
-            val importedEntries: List<VaultItem> = Gson().fromJson(json, object : TypeToken<List<VaultItem>>() {}.type)
-
-            // 5. Merge or Replace
-            showMergeDialog(importedEntries)
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Import failed", e)
-            Toast.makeText(this, "Import failed: " + e.message, Toast.LENGTH_LONG).show()
-        }
-    }
-
-    private fun showMergeDialog(importedEntries: List<VaultItem>) {
         AlertDialog.Builder(this)
-            .setTitle("Restore Backup")
-            .setMessage("Found " + importedEntries.size + " entries. Do you want to merge them with current entries or replace everything?")
-            .setPositiveButton("Merge") { _, _ ->
+            .setTitle("Authentication Required")
+            .setMessage("Enter your 6-digit master code to " + actionName + ":")
+            .setView(input)
+            .setPositiveButton("Confirm") { _, _ ->
+                val code = input.text.toString()
                 try {
-                    vaultManager.mergeEntries(importedEntries)
-                    Toast.makeText(this, "Merged successfully", Toast.LENGTH_SHORT).show()
+                    vaultManager.unlock(code)
+                    prefs.edit { putLong("last_code_time", System.currentTimeMillis()) }
+                    onValidCode()
                 } catch (e: Exception) {
-                    Toast.makeText(this, "Merge failed", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNeutralButton("Replace") { _, _ ->
-                try {
-                    vaultManager.saveEntries(importedEntries)
-                    Toast.makeText(this, "Replaced successfully", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
-                    Toast.makeText(this, "Replace failed", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Incorrect code", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
-    private fun showMasterCodePrompt(reason: String, onSuccess: Runnable) {
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Enter Master Code")
-        builder.setMessage("To $reason, enter your 6‑digit code.")
+    private fun showChangeCodeDialog() {
+        val oldCodeInput = EditText(this)
+        oldCodeInput.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+        val newCodeInput = EditText(this)
+        newCodeInput.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+
+        val container = LinearLayout(this)
+        container.orientation = LinearLayout.VERTICAL
+        container.setPadding(32, 16, 32, 16)
+        oldCodeInput.hint = "Old 6-digit code"
+        newCodeInput.hint = "New 6-digit code"
+        container.addView(oldCodeInput)
+        container.addView(newCodeInput)
+
+        AlertDialog.Builder(this)
+            .setTitle("Change Master Code")
+            .setView(container)
+            .setPositiveButton("Submit") { _, _ ->
+                val oldCode = oldCodeInput.text.toString()
+                val newCode = newCodeInput.text.toString()
+                if (oldCode.length != 6 || newCode.length != 6) {
+                    Toast.makeText(this, "Codes must be 6 digits", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                try {
+                    vaultManager.changeMasterCode(oldCode, newCode)
+                    prefs.edit { putLong("last_code_time", System.currentTimeMillis()) }
+                    Toast.makeText(this, "Master code updated successfully", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Failed to change code: " + e.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun promptBackupPassword() {
         val input = EditText(this)
         input.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-        builder.setView(input)
-        builder.setPositiveButton("OK") { _, _ ->
-            val code = input.text.toString()
-            try {
-                vaultManager.unlock(code)
-                onSuccess.run()
-            } catch (e: Exception) {
-                Toast.makeText(this@SettingsActivity, "Wrong code", Toast.LENGTH_SHORT).show()
-            }
-        }
-        builder.setNegativeButton("Cancel", null)
-        builder.show()
-    }
+        input.hint = "Mandatory 6-digit Backup Password"
 
-    private fun showChangeCodeDialog() {
-        val oldCodeBuilder = AlertDialog.Builder(this)
-        oldCodeBuilder.setTitle("Current Code")
-        oldCodeBuilder.setMessage("Enter your current 6‑digit code.")
-        val oldInput = EditText(this)
-        oldInput.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-        oldCodeBuilder.setView(oldInput)
-        oldCodeBuilder.setPositiveButton("Next") { _, _ ->
-            val oldCode = oldInput.text.toString()
-            try {
-                vaultManager.unlock(oldCode)
-                showNewCodeDialog()
-            } catch (e: Exception) {
-                Toast.makeText(this@SettingsActivity, "Wrong current code", Toast.LENGTH_SHORT).show()
-            }
-        }
-        oldCodeBuilder.setNegativeButton("Cancel", null)
-        oldCodeBuilder.show()
-    }
-
-    private fun showNewCodeDialog() {
-        val newCodeBuilder = AlertDialog.Builder(this)
-        newCodeBuilder.setTitle("New Code")
-        newCodeBuilder.setMessage("Enter a new 6‑digit code.")
-        val newInput = EditText(this)
-        newInput.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-        newCodeBuilder.setView(newInput)
-        newCodeBuilder.setPositiveButton("Next") { _, _ ->
-            val newCode = newInput.text.toString()
-            if (newCode.length != 6) {
-                Toast.makeText(this@SettingsActivity, "Code must be 6 digits", Toast.LENGTH_SHORT).show()
-                return@setPositiveButton
-            }
-            showConfirmNewCodeDialog(newCode)
-        }
-        newCodeBuilder.setNegativeButton("Cancel", null)
-        newCodeBuilder.show()
-    }
-
-    private fun showConfirmNewCodeDialog(newCode: String) {
-        val confirmBuilder = AlertDialog.Builder(this)
-        confirmBuilder.setTitle("Confirm New Code")
-        confirmBuilder.setMessage("Re‑enter the new 6‑digit code.")
-        val confirmInput = EditText(this)
-        confirmInput.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-        confirmBuilder.setView(confirmInput)
-        confirmBuilder.setPositiveButton("Change") { _, _ ->
-            val confirmCode = confirmInput.text.toString()
-            if (newCode != confirmCode) {
-                Toast.makeText(this@SettingsActivity, "Codes do not match", Toast.LENGTH_SHORT).show()
-                return@setPositiveButton
-            }
-            showOldCodeForChange(newCode)
-        }
-        confirmBuilder.setNegativeButton("Cancel", null)
-        confirmBuilder.show()
-    }
-
-    private fun showOldCodeForChange(newCode: String) {
-        val oldBuilder = AlertDialog.Builder(this)
-        oldBuilder.setTitle("Current Code")
-        oldBuilder.setMessage("Enter your current 6‑digit code to confirm change.")
-        val oldInput = EditText(this)
-        oldInput.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-        oldBuilder.setView(oldInput)
-        oldBuilder.setPositiveButton("Confirm") { _, _ ->
-            val oldCode = oldInput.text.toString()
-            try {
-                vaultManager.changeMasterCode(oldCode, newCode)
-                prefs.edit {
-                    putBoolean("fingerprint_enabled", false)
-                    remove("encrypted_vault_key")
+        AlertDialog.Builder(this)
+            .setTitle("Set Backup Password")
+            .setMessage("Enter a mandatory 6-digit password to encrypt your backup file:")
+            .setView(input)
+            .setPositiveButton("Next") { _, _ ->
+                val pwd = input.text.toString()
+                if (pwd.length != 6) {
+                    Toast.makeText(this, "Backup password must be exactly 6 characters long", Toast.LENGTH_LONG).show()
+                } else {
+                    pendingBackupPassword = pwd
+                    createDocumentLauncher.launch("vault-backup.txt")
                 }
-                switchFingerprint.isChecked = false
-                Toast.makeText(this@SettingsActivity, "Master code changed", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Toast.makeText(this@SettingsActivity, "Error: " + e.message, Toast.LENGTH_LONG).show()
             }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private var pendingBackupPassword: String? = null
+
+    private fun onBackupFileCreated(uri: Uri?) {
+        if (uri == null || pendingBackupPassword == null) return
+        val pwd = pendingBackupPassword ?: return
+        pendingBackupPassword = null
+
+        try {
+            val entries = vaultManager.loadEntries()
+            val gson = Gson()
+            val json = gson.toJson(entries)
+
+            val salt = ByteArray(16)
+            SecureRandom().nextBytes(salt)
+
+            val key = CryptoManager.deriveKey(pwd, salt)
+            val encryptedVault = CryptoManager.encrypt(json, key)
+
+            val buffer = ByteBuffer.allocate(16 + encryptedVault.length)
+            buffer.put(salt)
+            buffer.put(encryptedVault.toByteArray(StandardCharsets.UTF_8))
+
+            val base64Backup = Base64.getEncoder().encodeToString(buffer.array())
+
+            contentResolver.openOutputStream(uri)?.use { os: OutputStream ->
+                os.write(base64Backup.toByteArray(StandardCharsets.UTF_8))
+            }
+            Toast.makeText(this, "Backup exported successfully", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Export failed", e)
+            Toast.makeText(this, "Export failed: " + e.message, Toast.LENGTH_SHORT).show()
         }
-        oldBuilder.setNegativeButton("Cancel", null)
-        oldBuilder.show()
+    }
+
+    private fun onBackupFileOpened(uri: Uri?) {
+        if (uri == null) return
+
+        val input = EditText(this)
+        input.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+        input.hint = "Mandatory 6-digit Backup Password"
+
+        AlertDialog.Builder(this)
+            .setTitle("Enter Backup Password")
+            .setMessage("Enter the mandatory 6-digit password used when creating this backup:")
+            .setView(input)
+            .setPositiveButton("Restore") { _, _ ->
+                val pwd = input.text.toString()
+                if (pwd.length != 6) {
+                    Toast.makeText(this, "Backup password must be exactly 6 characters long", Toast.LENGTH_LONG).show()
+                    return@setPositiveButton
+                }
+                try {
+                    val base64Data = StringBuilder()
+                    contentResolver.openInputStream(uri)?.use { isStream: InputStream ->
+                        val reader = isStream.bufferedReader(StandardCharsets.UTF_8)
+                        reader.forEachLine { line -> base64Data.append(line) }
+                    }
+
+                    val fullBytes = Base64.getDecoder().decode(base64Data.toString())
+                    if (fullBytes.size < 17) {
+                        Toast.makeText(this, "Invalid backup file format", Toast.LENGTH_SHORT).show()
+                        return@setPositiveButton
+                    }
+
+                    val buffer = ByteBuffer.wrap(fullBytes)
+                    val salt = ByteArray(16)
+                    buffer.get(salt)
+
+                    val cipherBytes = ByteArray(fullBytes.size - 16)
+                    buffer.get(cipherBytes)
+                    val encryptedVault = String(cipherBytes, StandardCharsets.UTF_8)
+
+                    val key = CryptoManager.deriveKey(pwd, salt)
+                    val json = CryptoManager.decrypt(encryptedVault, key)
+
+                    val listType = object : TypeToken<MutableList<VaultItem>>() {}.type
+                    val imported: List<VaultItem> = Gson().fromJson(json, listType) ?: ArrayList()
+
+                    vaultManager.mergeEntries(imported)
+                    Toast.makeText(this, "Imported " + imported.size + " entries", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Import failed", e)
+                    Toast.makeText(this, "Import failed. Wrong password or corrupted file.", Toast.LENGTH_LONG).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     companion object {
         private const val TAG = "SettingsActivity"
-        private const val KEY_THEME_MODE = "theme_mode" // 0=light, 1=dark, 2=system
-        private const val KEY_COLOR_PALETTE = "color_palette" // 0=teal, 1=blue, 2=green, 3=purple, 4=red
+        private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_AUTO_LOCK = "auto_lock_time"
+        private const val KEY_COLOR_PALETTE = "color_palette"
 
-        private val AUTO_LOCK_VALUES = longArrayOf(
-            0,
+        private val AUTO_LOCK_VALUES = arrayOf(
+            0L,
             60 * 1000L,
             5 * 60 * 1000L,
             15 * 60 * 1000L,
@@ -594,19 +522,19 @@ class SettingsActivity : BaseLockActivity() {
         )
 
         private val PALETTE_COLORS = intArrayOf(
-            -0xff7685, // Teal
-            -0xe6892e, // Blue
-            -0xc771c4, // Green
-            -0x84e05e, // Purple
-            -0x2ce0d1, // Red
-            -0x6000,   // Amber Gold
-            -0xc0ae4b, // Indigo
-            -0x27e4a0, // Pink
-            -0xdededf, // Onyx
-            -0x43f0d,  // Yellow
-            -0xff432c, // Cyan
-            -0x86aa88, // Brown
-            -0x616162  // Grey
+            -0xe0322d, // Teal
+            -0xd7631b, // Blue
+            -0xb350a2, // Green
+            -0x75cd27, // Purple
+            -0x2cd0d3, // Red
+            -0x12bb2,  // Orange
+            -0xc6820f, // Indigo
+            -0x117a22, // Pink
+            -0xdcdcdc, // Onyx
+            -0x900,    // Yellow
+            -0xe05f01, // Cyan
+            -0x82a5b6, // Brown
+            -0x878788  // Grey
         )
     }
 }
