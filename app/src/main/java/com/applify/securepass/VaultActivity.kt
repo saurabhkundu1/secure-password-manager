@@ -1,6 +1,5 @@
 package com.applify.securepass
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
@@ -93,7 +92,7 @@ class VaultActivity : BaseLockActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Swipe to delete
+        // Swipe to delete / actions
         setupSwipeToDelete()
 
         // Unlock the vault
@@ -109,7 +108,7 @@ class VaultActivity : BaseLockActivity() {
                     vaultManager.unlock(code)
                 } catch (e: Exception) {
                     Log.e(TAG, "Unlock failed", e)
-                    Toast.makeText(this, "Unlock failed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Unlock failed", Toast.LENGTH_SHORT).show()
                     finish()
                     return
                 }
@@ -242,25 +241,28 @@ class VaultActivity : BaseLockActivity() {
                     val paint = Paint()
                     val alpha = (Math.min(Math.abs(dX) / itemView.width, 1.0f) * 255).toInt()
 
+                    val prefs = getSharedPreferences("secure_pass_prefs", MODE_PRIVATE)
+                    val action = if (dX > 0) {
+                        prefs.getInt("swipe_right_action", 1)
+                    } else {
+                        prefs.getInt("swipe_left_action", 2)
+                    }
+
+                    when (action) {
+                        1 -> paint.color = Color.argb(alpha, 211, 47, 47) // Red for Delete
+                        2 -> paint.color = Color.argb(alpha, 255, 179, 0) // Amber for Favorite/Pin
+                        3 -> paint.color = Color.argb(alpha, 30, 136, 229) // Blue for Copy Password
+                        4 -> paint.color = Color.argb(alpha, 67, 160, 71) // Green for Copy Username
+                        5 -> paint.color = Color.argb(alpha, 142, 36, 170) // Purple for Edit
+                        6 -> paint.color = Color.argb(alpha, 0, 172, 193) // Cyan for Copy Notes
+                        7 -> paint.color = Color.argb(alpha, 63, 81, 181) // Indigo for Share Credential
+                        8 -> paint.color = Color.argb(alpha, 0, 137, 123) // Teal for View Details
+                        else -> paint.color = Color.TRANSPARENT
+                    }
+
                     if (dX > 0) { // Swipe Right
-                        val rightAction = getSharedPreferences("secure_pass_prefs", MODE_PRIVATE).getInt("swipe_right_action", 1)
-                        if (rightAction == 1) {
-                            paint.color = Color.argb(alpha, 211, 47, 47) // Red for Delete
-                        } else if (rightAction == 2) {
-                            paint.color = Color.argb(alpha, 255, 179, 0) // Amber for Favorite
-                        } else {
-                            paint.color = Color.TRANSPARENT
-                        }
                         c.drawRect(itemView.left.toFloat(), itemView.top.toFloat(), dX, itemView.bottom.toFloat(), paint)
                     } else if (dX < 0) { // Swipe Left
-                        val leftAction = getSharedPreferences("secure_pass_prefs", MODE_PRIVATE).getInt("swipe_left_action", 2)
-                        if (leftAction == 1) {
-                            paint.color = Color.argb(alpha, 211, 47, 47) // Red for Delete
-                        } else if (leftAction == 2) {
-                            paint.color = Color.argb(alpha, 255, 179, 0) // Amber for Favorite
-                        } else {
-                            paint.color = Color.TRANSPARENT
-                        }
                         c.drawRect(itemView.right.toFloat() + dX, itemView.top.toFloat(), itemView.right.toFloat(), itemView.bottom.toFloat(), paint)
                     }
                 }
@@ -268,25 +270,71 @@ class VaultActivity : BaseLockActivity() {
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                val position = viewHolder.adapterPosition
+                val position = viewHolder.bindingAdapterPosition
                 if (position < 0 || position >= entries.size) return
                 val item = entries[position]
 
                 val prefs = getSharedPreferences("secure_pass_prefs", MODE_PRIVATE)
-                val action = if (direction == ItemTouchHelper.RIGHT) prefs.getInt("swipe_right_action", 1) else prefs.getInt("swipe_left_action", 2)
+                val action = if (direction == ItemTouchHelper.RIGHT) {
+                    prefs.getInt("swipe_right_action", 1)
+                } else {
+                    prefs.getInt("swipe_left_action", 2)
+                }
 
-                if (action == 1) { // Delete
-                    AlertDialog.Builder(this@VaultActivity)
-                        .setTitle("Delete")
-                        .setMessage("Delete " + item.website + "?")
-                        .setPositiveButton("Delete") { _, _ -> deleteItem(item) }
-                        .setNegativeButton("Cancel") { _, _ -> adapter.notifyItemChanged(position) }
-                        .show()
-                } else if (action == 2) { // Favorite
-                    item.isFavorite = !item.isFavorite
-                    saveAllAndRefresh()
-                } else { // None
-                    adapter.notifyItemChanged(position)
+                when (action) {
+                    1 -> { // Delete
+                        AlertDialog.Builder(this@VaultActivity)
+                            .setTitle("Delete")
+                            .setMessage("Delete " + item.website + "?")
+                            .setPositiveButton("Delete") { _, _ -> deleteItem(item) }
+                            .setNegativeButton("Cancel") { _, _ -> adapter.notifyItemChanged(position) }
+                            .show()
+                    }
+                    2 -> { // Favorite
+                        item.isFavorite = !item.isFavorite
+                        saveAllAndRefresh()
+                    }
+                    3 -> { // Copy Password
+                        ClipboardUtil.copyAndClear(this@VaultActivity, item.website, item.password, 30)
+                        adapter.notifyItemChanged(position)
+                    }
+                    4 -> { // Copy Username
+                        ClipboardUtil.copyAndClear(this@VaultActivity, item.website, item.username, 30)
+                        adapter.notifyItemChanged(position)
+                    }
+                    5 -> { // Edit Entry
+                        adapter.notifyItemChanged(position)
+                        val intent = Intent(this@VaultActivity, AddEditActivity::class.java)
+                        intent.putExtra("USER_CODE", userCode)
+                        intent.putExtra("ITEM_ID", item.id)
+                        startActivity(intent)
+                    }
+                    6 -> { // Copy Notes
+                        if (item.notes.isNotEmpty()) {
+                            ClipboardUtil.copyAndClear(this@VaultActivity, "${item.website} Notes", item.notes, 30)
+                        } else {
+                            Toast.makeText(this@VaultActivity, "No notes saved for this entry", Toast.LENGTH_SHORT).show()
+                        }
+                        adapter.notifyItemChanged(position)
+                    }
+                    7 -> { // Share Credential Summary
+                        val shareIntent = Intent(Intent.ACTION_SEND)
+                        shareIntent.type = "text/plain"
+                        shareIntent.putExtra(Intent.EXTRA_TEXT, "Account: ${item.website}\nUsername: ${item.username}")
+                        startActivity(Intent.createChooser(shareIntent, "Share Credential"))
+                        adapter.notifyItemChanged(position)
+                    }
+                    8 -> { // View Details
+                        adapter.notifyItemChanged(position)
+                        AlertDialog.Builder(this@VaultActivity)
+                            .setTitle(item.website)
+                            .setMessage("Username: ${item.username}\n\nNotes: ${item.notes.ifEmpty { "None" }}")
+                            .setPositiveButton("OK", null)
+                            .show()
+                    }
+                    else -> { // None
+                        adapter.notifyItemChanged(position)
+                    }
                 }
             }
         }

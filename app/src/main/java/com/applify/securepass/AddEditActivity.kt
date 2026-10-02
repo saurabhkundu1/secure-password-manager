@@ -6,13 +6,20 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.ProgressBar
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import com.applify.securepass.data.SitePreset
 import com.applify.securepass.data.VaultItem
 import com.applify.securepass.data.VaultManager
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.google.android.material.textfield.TextInputEditText
 import java.util.Objects
 
@@ -24,6 +31,7 @@ class AddEditActivity : BaseLockActivity() {
     private lateinit var etNotes: TextInputEditText
     private lateinit var progressStrength: ProgressBar
     private lateinit var tvStrengthText: TextView
+    private lateinit var chipGroupPresets: ChipGroup
     private lateinit var vaultManager: VaultManager
     private var userCode: String? = null
     private var editingItemId: String? = null
@@ -42,8 +50,11 @@ class AddEditActivity : BaseLockActivity() {
         etNotes = findViewById(R.id.etNotes)
         progressStrength = findViewById(R.id.progressStrength)
         tvStrengthText = findViewById(R.id.tvStrengthText)
+        chipGroupPresets = findViewById(R.id.chipGroupPresets)
         val btnGenerate: Button = findViewById(R.id.btnGeneratePassword)
         val btnSave: Button = findViewById(R.id.btnSave)
+
+        setupQuickAddPresets()
 
         if (intent.hasExtra("ITEM_ID")) {
             editingItemId = intent.getStringExtra("ITEM_ID")
@@ -63,6 +74,26 @@ class AddEditActivity : BaseLockActivity() {
 
         btnGenerate.setOnClickListener { showPasswordGeneratorDialog() }
         btnSave.setOnClickListener { saveEntry() }
+    }
+
+    private fun setupQuickAddPresets() {
+        chipGroupPresets.removeAllViews()
+        for (preset in SitePreset.PRESETS) {
+            val chip = Chip(this)
+            chip.text = preset.name
+            chip.isClickable = true
+            chip.setOnClickListener {
+                etWebsite.setText(preset.domain)
+                val generatedPwd = preset.generatePassword()
+                etPassword.setText(generatedPwd)
+                Toast.makeText(
+                    this,
+                    "Applied ${preset.name} rules & generated password!",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            chipGroupPresets.addView(chip)
+        }
     }
 
     private fun loadExistingItem(itemId: String) {
@@ -134,11 +165,34 @@ class AddEditActivity : BaseLockActivity() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_password_generator, null)
         builder.setView(dialogView)
 
+        val spinnerPresets: Spinner = dialogView.findViewById(R.id.spinnerPresets)
         val etLength: TextInputEditText = dialogView.findViewById(R.id.etLength)
         val cbUpper: CheckBox = dialogView.findViewById(R.id.cbUpper)
         val cbLower: CheckBox = dialogView.findViewById(R.id.cbLower)
         val cbDigits: CheckBox = dialogView.findViewById(R.id.cbDigits)
         val cbSymbols: CheckBox = dialogView.findViewById(R.id.cbSymbols)
+
+        val presetNames = mutableListOf("Custom Rules")
+        presetNames.addAll(SitePreset.PRESETS.map { "${it.name} (${it.length}-char)" })
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, presetNames)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerPresets.adapter = adapter
+
+        spinnerPresets.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (position > 0) {
+                    val preset = SitePreset.PRESETS[position - 1]
+                    etLength.setText(preset.length.toString())
+                    cbUpper.isChecked = preset.useUpper
+                    cbLower.isChecked = preset.useLower
+                    cbDigits.isChecked = preset.useDigits
+                    cbSymbols.isChecked = preset.useSymbols
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
 
         builder.setPositiveButton("Generate") { _, _ ->
             val length = try {
@@ -181,15 +235,15 @@ class AddEditActivity : BaseLockActivity() {
 
         if (score <= 40) {
             tvStrengthText.text = "Weak"
-            tvStrengthText.setTextColor(-0x2ce0d1) // palette_red_primary
+            tvStrengthText.setTextColor(-0x2ce0d1)
             progressStrength.progressTintList = ColorStateList.valueOf(-0x2ce0d1)
         } else if (score <= 70) {
             tvStrengthText.text = "Fair"
-            tvStrengthText.setTextColor(-0xa8400) // palette_orange_primary
+            tvStrengthText.setTextColor(-0xa8400)
             progressStrength.progressTintList = ColorStateList.valueOf(-0xa8400)
         } else {
             tvStrengthText.text = "Strong"
-            tvStrengthText.setTextColor(-0xc771c4) // palette_green_primary
+            tvStrengthText.setTextColor(-0xc771c4)
             progressStrength.progressTintList = ColorStateList.valueOf(-0xc771c4)
         }
     }

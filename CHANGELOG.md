@@ -2,6 +2,16 @@
 
 All notable changes to the **Secure Pass** project will be documented in this file.
 
+## [1.0.1] - 2026-09-30
+
+### Added ✨
+- **Shuffled Number Pad**: Randomized 12-button lock screen numpad (`0`–`9`, `*`, `#`) on every app launch to prevent fingerprint pattern spying.
+- **Day-to-Day Popular Site Presets**: One-touch Quick Add bar in `AddEditActivity` and preset selector in Password Generator for popular sites (Google, GitHub, Amazon, Netflix, Banking, PayPal, Microsoft, Apple, Facebook, X, Wi-Fi) with automated site-specific password rules.
+- **24-Hour Master Code Policy**: Mandatory master code entry once every 24 hours, automatically resetting the 24-hour timer upon successful entry.
+- **Mandatory 6-Digit Backup Key**: Backup exports/imports now enforce a strict 6-character encryption password policy.
+- **8 Custom Swipe Actions**: Added 8 swipe actions with distinct fading color trails (Delete, Favorite, Copy Password, Copy Username, Edit Entry, Copy Notes, Share Credential, View Details).
+- **Dynamic App Icon & Theme Synchronization**: Enhanced theme palette synchronization with app launcher icon variants.
+
 ## [1.0.0] - 2026-09-22
 
 ### Production Release 🚀
