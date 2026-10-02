@@ -2,7 +2,6 @@ name: Publish F-Droid Repository & GitHub Release
 
 on:
   push:
-    branches: [ main, master ]
     tags:
       - 'v*'
       - 'V*'
@@ -14,17 +13,19 @@ permissions:
   id-token: write
 
 jobs:
-  deploy:
+  build-and-sign:
+    name: Build & Sign APK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 17 with Gradle Cache
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle'
 
       - name: Grant Execute Permission to Gradlew
         run: chmod +x ./gradlew
@@ -47,44 +48,84 @@ jobs:
           alias: ${{ secrets.KEY_ALIAS }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
+      - name: Upload Signed APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-release-apk
+          path: ${{ steps.sign_app.outputs.signedReleaseFile }}
+          retention-days: 1
+
+  publish-github-release:
+    name: Publish GitHub Release
+    needs: build-and-sign
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Download Signed APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: signed-release-apk
+          path: release_apk
+
       - name: Prepare Release Assets & Notes
-        if: startsWith(github.ref, 'refs/tags/')
         run: |
           VERSION="${{ github.ref_name }}"
+          if [ -z "$VERSION" ] || [ "$VERSION" = "main" ] || [ "$VERSION" = "master" ]; then
+            VERSION="v1.0.1"
+          fi
+          SIGNED_APK=$(find release_apk -type f -name "*.apk" | head -n 1)
           APK_NAME="SecurePass-${VERSION}-signed.apk"
-          cp ${{ steps.sign_app.outputs.signedReleaseFile }} "${APK_NAME}"
+          cp "$SIGNED_APK" "${APK_NAME}"
           SHA256=$(sha256sum "${APK_NAME}" | awk '{print $1}')
 
-          cat << 'EOF' > RELEASE_NOTES.md
-          # Secure Pass RELEASE_VERSION
+          cat << EOF > RELEASE_NOTES.md
+          # 🔐 Secure Pass ${VERSION}
 
-          ## Official Production Release
+          ## 🚀 Official Production Release (${VERSION})
 
-          ### Features
-          - AES-256-GCM encrypted local vault
-          - 6-digit master code with optional fingerprint unlock
-          - Clipboard auto-clear, password generator
-          - Dark/Light/System theme modes
+          ### 📱 Features
+          - **AES-256-GCM Encrypted Vault**: High-security local encrypted storage.
+          - **Shuffled Number Pad**: Randomized 12-button lock screen numpad on every launch.
+          - **Popular Site Presets**: One-touch quick add for Google, GitHub, Amazon, Netflix, Banking, PayPal, Microsoft, Apple, etc.
+          - **24-Hour Master Code Policy**: Mandatory master code verification every 24 hours.
+          - **Mandatory 6-Digit Backup Key**: Enforced 6-character backup encryption password policy.
+          - **8 Custom Swipe Actions**: Configurable swipe gestures with fading color trails.
 
-          ### Package
-          - File: RELEASE_FILE
-          - SHA-256: RELEASE_SHA
-          - Min Android: 8.0 (API 26)
-          - Target Android: 15 (API 35)
+          ---
+
+          ### 📦 Verified Release Package
+          - **File Name**: \`${APK_NAME}\`
+          - **SHA-256 Checksum**: \`${SHA256}\`
+          - **Minimum Android Version**: Android 8.0 (API 26)
+          - **Target Android Version**: Android 15 (API 35)
+
+          Download the signed \`.apk\` asset below to install directly on your Android device.
           EOF
-          sed -i "s|RELEASE_VERSION|${VERSION}|g" RELEASE_NOTES.md
-          sed -i "s|RELEASE_FILE|${APK_NAME}|g" RELEASE_NOTES.md
-          sed -i "s|RELEASE_SHA|${SHA256}|g" RELEASE_NOTES.md
 
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: SecurePass-${{ github.ref_name }}-signed.apk
+          files: SecurePass-*-signed.apk
           name: Secure Pass ${{ github.ref_name }}
           body_path: RELEASE_NOTES.md
           draft: false
           prerelease: false
+
+  deploy-fdroid:
+    name: Deploy to F-Droid Repository
+    needs: build-and-sign
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Download Signed APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: signed-release-apk
+          path: release_apk
 
       - name: Build F-Droid Repository
         run: |
@@ -97,7 +138,7 @@ jobs:
           mkdir -p fdroid_repo/repo
           mkdir -p fdroid_repo/metadata/com.applify.securepass/en-US/images
 
-          SIGNED_APK="${{ steps.sign_app.outputs.signedReleaseFile }}"
+          SIGNED_APK=$(find release_apk -type f -name "*.apk" | head -n 1)
           VC=$(aapt dump badging "$SIGNED_APK" | grep versionCode | sed -n "s/.*versionCode='\\([^']*\\)'.*/\\1/p")
           VN=$(aapt dump badging "$SIGNED_APK" | grep versionName | sed -n "s/.*versionName='\\([^']*\\)'.*/\\1/p")
           if [ -z "$VC" ]; then VC="1"; fi
@@ -129,16 +170,31 @@ jobs:
           touch .nojekyll
           touch repo/.nojekyll
 
-      - name: Deploy to Applify Repo
+      - name: Deploy to Applify Repo (Safe Push)
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          cd fdroid_repo
-          git init
+          VERSION="${{ github.ref_name }}"
+          if [ -z "$VERSION" ]; then VERSION="latest"; fi
+
+          # Clone existing Applify repository (preserving complete git commit history)
+          git clone https://x-access-token:${GH_PAT}@github.com/saurabhkundu1/Applify.git applify_deploy
+
+          # Copy updated F-Droid repository files over into the cloned repository
+          cp -r fdroid_repo/* applify_deploy/
+          cp -f fdroid_repo/.nojekyll applify_deploy/
+          if [ -f fdroid_repo/repo/.nojekyll ]; then
+            mkdir -p applify_deploy/repo
+            cp -f fdroid_repo/repo/.nojekyll applify_deploy/repo/
+          fi
+
+          cd applify_deploy
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "Update F-Droid repo ${{ github.ref_name }}"
-          git branch -M main
-          git remote add origin https://x-access-token:${GH_PAT}@github.com/saurabhkundu1/Applify.git
-          git push -f origin main
+          if ! git diff --staged --quiet; then
+            git commit -m "Update F-Droid repo ${VERSION}"
+            git push origin main
+          else
+            echo "No changes to commit in Applify repository."
+          fi
