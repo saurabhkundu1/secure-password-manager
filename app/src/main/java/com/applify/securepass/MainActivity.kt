@@ -1,6 +1,5 @@
 package com.applify.securepass
 
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -29,17 +28,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvError: TextView
     private lateinit var pinDotsContainer: LinearLayout
 
-    // Number pad buttons
-    private lateinit var btn0: Button
-    private lateinit var btn1: Button
-    private lateinit var btn2: Button
-    private lateinit var btn3: Button
-    private lateinit var btn4: Button
-    private lateinit var btn5: Button
-    private lateinit var btn6: Button
-    private lateinit var btn7: Button
-    private lateinit var btn8: Button
-    private lateinit var btn9: Button
+    // Number pad key buttons (12 keys: 0-9, *, #)
+    private val keyButtons = mutableListOf<Button>()
     private lateinit var btnDelete: Button
     private lateinit var btnSubmit: Button
     private var btnBiometric: ImageButton? = null
@@ -61,25 +51,26 @@ class MainActivity : AppCompatActivity() {
         tvError = findViewById(R.id.tvError)
         pinDotsContainer = findViewById(R.id.pinDotsContainer)
 
-        // Bind number buttons
-        btn0 = findViewById(R.id.btn0)
-        btn1 = findViewById(R.id.btn1)
-        btn2 = findViewById(R.id.btn2)
-        btn3 = findViewById(R.id.btn3)
-        btn4 = findViewById(R.id.btn4)
-        btn5 = findViewById(R.id.btn5)
-        btn6 = findViewById(R.id.btn6)
-        btn7 = findViewById(R.id.btn7)
-        btn8 = findViewById(R.id.btn8)
-        btn9 = findViewById(R.id.btn9)
+        // Bind 12 key buttons
+        keyButtons.clear()
+        val keyIds = arrayOf(
+            R.id.btnKey0, R.id.btnKey1, R.id.btnKey2,
+            R.id.btnKey3, R.id.btnKey4, R.id.btnKey5,
+            R.id.btnKey6, R.id.btnKey7, R.id.btnKey8,
+            R.id.btnKey9, R.id.btnKey10, R.id.btnKey11
+        )
+        for (id in keyIds) {
+            keyButtons.add(findViewById(id))
+        }
+
         btnDelete = findViewById(R.id.btnDelete)
         btnSubmit = findViewById(R.id.btnSubmit)
         btnBiometric = findViewById(R.id.btnBiometric)
 
         btnBiometric?.setImageResource(ThemeHelper.getCurrentThemeIconResId(this))
 
-        // Set click listeners
-        setNumberPadListeners()
+        // Set control pad listeners
+        setControlPadListeners()
 
         // Check if vault already exists
         if (isVaultSetup()) {
@@ -102,32 +93,44 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Reshuffle numbers on every launch / display of lock screen
+        shuffleAndBindNumberPad()
+    }
+
     private fun isVaultSetup(): Boolean {
-        // If the salt file exists, we consider the vault already set up.
         val saltFile = File(filesDir, "vault.salt")
         return saltFile.exists()
     }
 
-    private fun setNumberPadListeners() {
+    private fun shuffleAndBindNumberPad() {
+        // Includes digits 0-9 plus '*' and '#'
+        val keys = mutableListOf("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "#")
+        keys.shuffle()
+
         val numberListener = View.OnClickListener { v ->
-            if (enteredCode.length < 6) {
-                enteredCode += (v as Button).text.toString()
-                updateDotDisplay()
-                tvError.visibility = View.GONE
+            val value = (v as Button).text.toString()
+            if (value in "0".."9") {
+                if (enteredCode.length < 6) {
+                    enteredCode += value
+                    updateDotDisplay()
+                    tvError.visibility = View.GONE
+                }
+            } else {
+                // '*' or '#' was tapped - PIN only accepts numbers
+                tvError.text = "PIN accepts numbers only"
+                tvError.visibility = View.VISIBLE
             }
         }
 
-        btn0.setOnClickListener(numberListener)
-        btn1.setOnClickListener(numberListener)
-        btn2.setOnClickListener(numberListener)
-        btn3.setOnClickListener(numberListener)
-        btn4.setOnClickListener(numberListener)
-        btn5.setOnClickListener(numberListener)
-        btn6.setOnClickListener(numberListener)
-        btn7.setOnClickListener(numberListener)
-        btn8.setOnClickListener(numberListener)
-        btn9.setOnClickListener(numberListener)
+        for (i in keyButtons.indices) {
+            keyButtons[i].text = keys[i]
+            keyButtons[i].setOnClickListener(numberListener)
+        }
+    }
 
+    private fun setControlPadListeners() {
         btnDelete.setOnClickListener {
             if (enteredCode.isNotEmpty()) {
                 enteredCode = enteredCode.substring(0, enteredCode.length - 1)
@@ -166,15 +169,12 @@ class MainActivity : AppCompatActivity() {
     private fun processCode(code: String) {
         try {
             if (isSetupMode) {
-                // Setup mode: first entry is the code, confirm it
                 if (pendingCode.isEmpty()) {
-                    // First time entering new code
                     pendingCode = code
                     enteredCode = ""
                     updateDotDisplay()
                     tvInstruction.text = "Confirm your 6-digit code"
                 } else {
-                    // Confirmation
                     if (code == pendingCode) {
                         vaultManager.setupNewVault(code)
                         isSetupMode = false
@@ -193,12 +193,11 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             } else {
-                // Unlock mode
                 vaultManager.unlock(code)
                 val intent = Intent(this@MainActivity, VaultActivity::class.java)
                 intent.putExtra("USER_CODE", code)
                 startActivity(intent)
-                finish() // so the user can’t press Back to return to the unlock screen
+                finish()
             }
         } catch (e: Exception) {
             tvError.text = "Wrong code. Please try again."
@@ -217,7 +216,6 @@ class MainActivity : AppCompatActivity() {
         if (biometricEnabled && encryptedKey != null && !isExpired) {
             btnBiometric?.visibility = View.VISIBLE
             btnBiometric?.setOnClickListener { triggerBiometricUnlock(encryptedKey) }
-            // Automatically trigger it on start
             triggerBiometricUnlock(encryptedKey)
         }
     }

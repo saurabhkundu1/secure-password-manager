@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center_horizontal"
-    android:paddingTop="32dp"
+    android:paddingTop="20dp"
     android:paddingStart="24dp"
     android:paddingEnd="24dp"
     android:fitsSystemWindows="true">
@@ -14,23 +14,23 @@
     <!-- App Icon -->
     <ImageView
         android:id="@+id/ivLockIcon"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:src="@drawable/classic_blue"
         android:scaleType="fitCenter"
         android:adjustViewBounds="true"
         android:contentDescription="Secure Pass"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="8dp"/>
 
     <!-- Title -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Secure Pass"
-        android:textSize="28sp"
+        android:textSize="24sp"
         android:textColor="?attr/colorPrimary"
         android:textStyle="bold"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="4dp"/>
 
     <!-- Instruction Text (changes based on setup/unlock) -->
     <TextView
@@ -38,9 +38,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Enter your 6-digit code"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:textColor="?android:attr/textColorSecondary"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="16dp"/>
 
     <!-- 6-dot PIN display -->
     <LinearLayout
@@ -48,57 +48,55 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="32dp">
-
-        <!-- We'll generate these dots programmatically in Java,
-             but we'll keep one for reference. Actually, let's create them in Java
-             to avoid duplication. So remove the placeholder dots.
-             Just keep the empty container. -->
+        android:layout_marginBottom="16dp">
     </LinearLayout>
 
-    <!-- Number Pad in a GridLayout (3 columns) -->
+    <!-- Number Pad in a GridLayout (3 columns x 5 rows) -->
     <GridLayout
         android:id="@+id/gridNumberPad"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:columnCount="3"
-        android:rowCount="4"
+        android:rowCount="5"
         android:gravity="center">
 
-        <!-- Row 1: 1, 2, 3 -->
-        <Button android:id="@+id/btn1" style="@style/NumberPadButton" android:text="1"/>
-        <Button android:id="@+id/btn2" style="@style/NumberPadButton" android:text="2"/>
-        <Button android:id="@+id/btn3" style="@style/NumberPadButton" android:text="3"/>
+        <!-- Row 1 -->
+        <Button android:id="@+id/btnKey0" style="@style/NumberPadButton"/>
+        <Button android:id="@+id/btnKey1" style="@style/NumberPadButton"/>
+        <Button android:id="@+id/btnKey2" style="@style/NumberPadButton"/>
 
-        <!-- Row 2: 4, 5, 6 -->
-        <Button android:id="@+id/btn4" style="@style/NumberPadButton" android:text="4"/>
-        <Button android:id="@+id/btn5" style="@style/NumberPadButton" android:text="5"/>
-        <Button android:id="@+id/btn6" style="@style/NumberPadButton" android:text="6"/>
+        <!-- Row 2 -->
+        <Button android:id="@+id/btnKey3" style="@style/NumberPadButton"/>
+        <Button android:id="@+id/btnKey4" style="@style/NumberPadButton"/>
+        <Button android:id="@+id/btnKey5" style="@style/NumberPadButton"/>
 
-        <!-- Row 3: 7, 8, 9 -->
-        <Button android:id="@+id/btn7" style="@style/NumberPadButton" android:text="7"/>
-        <Button android:id="@+id/btn8" style="@style/NumberPadButton" android:text="8"/>
-        <Button android:id="@+id/btn9" style="@style/NumberPadButton" android:text="9"/>
+        <!-- Row 3 -->
+        <Button android:id="@+id/btnKey6" style="@style/NumberPadButton"/>
+        <Button android:id="@+id/btnKey7" style="@style/NumberPadButton"/>
+        <Button android:id="@+id/btnKey8" style="@style/NumberPadButton"/>
 
-        <!-- Row 4: Delete, 0, Done/Submit -->
+        <!-- Row 4 -->
+        <Button android:id="@+id/btnKey9" style="@style/NumberPadButton"/>
+        <Button android:id="@+id/btnKey10" style="@style/NumberPadButton"/>
+        <Button android:id="@+id/btnKey11" style="@style/NumberPadButton"/>
+
+        <!-- Row 5: Delete, Biometric (center), Submit -->
         <Button android:id="@+id/btnDelete" style="@style/NumberPadButton" android:text="⌫"
             android:textColor="#D32F2F"/>
-        <Button android:id="@+id/btn0" style="@style/NumberPadButton" android:text="0"/>
+        <ImageButton
+            android:id="@+id/btnBiometric"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_margin="2dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_dialog_info"
+            android:contentDescription="Biometric Unlock"
+            android:scaleType="fitCenter"
+            app:tint="?attr/colorPrimary"
+            android:visibility="invisible"/>
         <Button android:id="@+id/btnSubmit" style="@style/NumberPadButton" android:text="✓"
             android:textColor="?attr/colorPrimary"/>
     </GridLayout>
-
-    <ImageButton
-        android:id="@+id/btnBiometric"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_marginTop="24dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@android:drawable/ic_dialog_info"
-        android:contentDescription="Biometric Unlock"
-        android:scaleType="fitCenter"
-        app:tint="?attr/colorPrimary"
-        android:visibility="gone"/>
 
     <!-- Error message (hidden by default) -->
     <TextView
@@ -109,6 +107,6 @@
         android:textSize="14sp"
         android:textColor="#D32F2F"
         android:visibility="gone"
-        android:layout_marginTop="16dp"/>
+        android:layout_marginTop="12dp"/>
 
 </LinearLayout>
