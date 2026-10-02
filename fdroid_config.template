@@ -7,4 +7,4 @@ keystore: "../keystore.jks"
 repo_keyalias: "KEY_ALIAS_PLACEHOLDER"
 keystorepass: "KEYSTORE_PASS_PLACEHOLDER"
 keypass: "KEY_PASS_PLACEHOLDER"
-archive_older: 0
+archive_older: 5

@@ -55,14 +55,6 @@ jobs:
           cp ${{ steps.sign_app.outputs.signedReleaseFile }} "${APK_NAME}"
           SHA256=$(sha256sum "${APK_NAME}" | awk '{print $1}')
 
-          RELEASES=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/releases | grep '"id":' | sed -E 's/.*: ([0-9]+).*/\1/')
-          for rel_id in $RELEASES; do
-            curl -s -X DELETE -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              https://api.github.com/repos/${{ github.repository }}/releases/$rel_id || true
-          done
-
           cat << 'EOF' > RELEASE_NOTES.md
           # Secure Pass RELEASE_VERSION
 
