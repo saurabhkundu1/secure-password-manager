@@ -142,6 +142,9 @@ jobs:
           VERSION="${{ github.ref_name }}"
           if [ -z "$VERSION" ]; then VERSION="latest"; fi
 
+          # Decode signing keystore for F-Droid index signing
+          echo "${{ secrets.SIGNING_KEY }}" | base64 -d > keystore.jks
+
           # Clone existing Applify F-Droid repository FIRST
           git clone https://x-access-token:${GH_PAT}@github.com/saurabhkundu1/Applify.git fdroid_repo
 
@@ -197,12 +200,59 @@ jobs:
           # EXPLICITLY REMOVE SENSITIVE FILES BEFORE GIT ADD
           rm -f config.yml keystore.jks ../keystore.jks repo/config.yml repo/keystore.jks
 
-          # Commit and push updated index and APKs to Applify repo
+          # Create GitHub Pages deployment workflow inside Applify repo so GitHub Pages automatically deploys on every update
+          mkdir -p .github/workflows
+          python3 - << 'PYEOF'
+          import textwrap
+          content = textwrap.dedent('''\
+          name: Deploy GitHub Pages
+
+          on:
+            push:
+              branches: [ main ]
+            workflow_dispatch:
+
+          permissions:
+            contents: read
+            pages: write
+            id-token: write
+
+          concurrency:
+            group: "pages"
+            cancel-in-progress: true
+
+          jobs:
+            deploy:
+              environment:
+                name: github-pages
+                url: ${{ steps.deployment.outputs.page_url }}
+              runs-on: ubuntu-24.04
+              steps:
+                - name: Checkout Source
+                  uses: actions/checkout@v4
+
+                - name: Setup Pages
+                  uses: actions/configure-pages@v5
+
+                - name: Upload Artifact
+                  uses: actions/upload-pages-artifact@v3
+                  with:
+                    path: '.'
+
+                - name: Deploy to GitHub Pages
+                  id: deployment
+                  uses: actions/deploy-pages@v4
+          ''')
+          with open('.github/workflows/pages.yml', 'w') as f:
+              f.write(content)
+          PYEOF
+
+          # Commit and push updated index, APKs, and pages workflow to Applify repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           if ! git diff --staged --quiet; then
-            git commit -m "Update F-Droid repo ${VERSION} (versionCode ${VC})"
+            git commit -m "Update F-Droid repo ${VERSION} (versionCode ${VC}) and trigger Pages deployment"
             git push origin main
           else
             echo "No changes to commit in Applify repository."
