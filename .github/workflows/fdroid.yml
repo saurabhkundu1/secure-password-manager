@@ -127,24 +127,37 @@ jobs:
           name: signed-release-apk
           path: release_apk
 
-      - name: Build F-Droid Repository
+      - name: Build & Deploy F-Droid Repository
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           sudo apt-get update && sudo apt-get install -y aapt python3-pip python3-setuptools libjpeg-dev zlib1g-dev gettext
           pip3 install --user fdroidserver
           export PATH=$PATH:$HOME/.local/bin
 
+          VERSION="${{ github.ref_name }}"
+          if [ -z "$VERSION" ]; then VERSION="latest"; fi
+
+          # Decode signing keystore for F-Droid index signing
           echo "${{ secrets.SIGNING_KEY }}" | base64 -d > keystore.jks
+
+          # Clone existing Applify F-Droid repository FIRST to preserve all historical APKs and git history
+          git clone https://x-access-token:${GH_PAT}@github.com/saurabhkundu1/Applify.git fdroid_repo
 
           mkdir -p fdroid_repo/repo
           mkdir -p fdroid_repo/metadata/com.applify.securepass/en-US/images
 
+          # Locate new signed APK and extract version details
           SIGNED_APK=$(find release_apk -type f -name "*.apk" | head -n 1)
           VC=$(aapt dump badging "$SIGNED_APK" | grep versionCode | sed -n "s/.*versionCode='\\([^']*\\)'.*/\\1/p")
           VN=$(aapt dump badging "$SIGNED_APK" | grep versionName | sed -n "s/.*versionName='\\([^']*\\)'.*/\\1/p")
           if [ -z "$VC" ]; then VC="1"; fi
           if [ -z "$VN" ]; then VN="1.0.0"; fi
 
+          # Copy new APK into fdroid_repo/repo/ alongside existing APKs
           cp "$SIGNED_APK" "fdroid_repo/repo/com.applify.securepass_${VC}.apk"
+
+          # Copy metadata and icons
           cp fastlane/metadata/android/en-US/*.txt fdroid_repo/metadata/com.applify.securepass/en-US/ || true
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/metadata/com.applify.securepass/en-US/images/icon.png || true
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/icon.png || true
@@ -161,39 +174,23 @@ jobs:
           sed -i "s|KEYSTORE_PASS_PLACEHOLDER|${{ secrets.KEYSTORE_PASSWORD }}|" fdroid_repo/config.yml
           sed -i "s|KEY_PASS_PLACEHOLDER|${{ secrets.KEY_PASSWORD }}|" fdroid_repo/config.yml
 
+          # Run fdroid update and signindex on the complete repository
           cd fdroid_repo
           chmod 0600 config.yml
           fdroid update --pretty
           fdroid signindex
 
+          # Sync repo/ contents to root so both root URL and /repo URL work
           cp -r repo/* ./
           touch .nojekyll
           touch repo/.nojekyll
 
-      - name: Deploy to Applify Repo (Safe Push)
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
-        run: |
-          VERSION="${{ github.ref_name }}"
-          if [ -z "$VERSION" ]; then VERSION="latest"; fi
-
-          # Clone existing Applify repository (preserving complete git commit history)
-          git clone https://x-access-token:${GH_PAT}@github.com/saurabhkundu1/Applify.git applify_deploy
-
-          # Copy updated F-Droid repository files over into the cloned repository
-          cp -r fdroid_repo/* applify_deploy/
-          cp -f fdroid_repo/.nojekyll applify_deploy/
-          if [ -f fdroid_repo/repo/.nojekyll ]; then
-            mkdir -p applify_deploy/repo
-            cp -f fdroid_repo/repo/.nojekyll applify_deploy/repo/
-          fi
-
-          cd applify_deploy
+          # Commit and push updated index and APKs to Applify GitHub Pages repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           if ! git diff --staged --quiet; then
-            git commit -m "Update F-Droid repo ${VERSION}"
+            git commit -m "Update F-Droid repo ${VERSION} (versionCode ${VC})"
             git push origin main
           else
             echo "No changes to commit in Applify repository."
