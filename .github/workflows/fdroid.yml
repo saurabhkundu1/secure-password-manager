@@ -144,6 +144,9 @@ jobs:
           # Clone existing Applify F-Droid repository FIRST to preserve all historical APKs and git history
           git clone https://x-access-token:${GH_PAT}@github.com/saurabhkundu1/Applify.git fdroid_repo
 
+          # Remove any non-APK files inside repo/ before fdroid update scans the folder
+          rm -f fdroid_repo/repo/.nojekyll fdroid_repo/.nojekyll || true
+
           mkdir -p fdroid_repo/repo
           mkdir -p fdroid_repo/metadata/com.applify.securepass/en-US/images
 
@@ -183,7 +186,6 @@ jobs:
           # Sync repo/ contents to root so both root URL and /repo URL work
           cp -r repo/* ./
           touch .nojekyll
-          touch repo/.nojekyll
 
           # Commit and push updated index and APKs to Applify GitHub Pages repo
           git config user.name "github-actions[bot]"
