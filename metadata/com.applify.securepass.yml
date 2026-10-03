@@ -9,5 +9,5 @@ Summary: "Offline Secure Password Manager"
 Description: |-
   Secure Password Manager with AES-256-GCM encryption.
 AutoName: "Secure Pass"
-CurrentVersion: "1.0.0"
-CurrentVersionCode: 1
+CurrentVersion: "1.0.1"
+CurrentVersionCode: 2
