@@ -15,7 +15,7 @@ permissions:
 jobs:
   build-and-sign:
     name: Build & Sign APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
@@ -62,7 +62,7 @@ jobs:
   publish-github-release:
     name: Publish GitHub Release
     needs: build-and-sign
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
@@ -120,7 +120,7 @@ jobs:
   deploy-fdroid:
     name: Deploy to F-Droid Repository
     needs: build-and-sign
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
@@ -142,29 +142,26 @@ jobs:
           VERSION="${{ github.ref_name }}"
           if [ -z "$VERSION" ]; then VERSION="latest"; fi
 
-          # Decode signing keystore for F-Droid index signing
-          echo "${{ secrets.SIGNING_KEY }}" | base64 -d > keystore.jks
-
-          # Clone existing Applify F-Droid repository FIRST to preserve all historical APKs and git history
+          # Clone existing Applify F-Droid repository FIRST
           git clone https://x-access-token:${GH_PAT}@github.com/saurabhkundu1/Applify.git fdroid_repo
 
-          # Remove any non-APK files inside repo/ before fdroid update scans the folder
+          # Decode keystore DIRECTLY inside fdroid_repo/
+          echo "${{ secrets.SIGNING_KEY }}" | base64 -d > fdroid_repo/keystore.jks
+
+          # Remove non-APK files in repo/ before fdroid update
           rm -f fdroid_repo/repo/.nojekyll fdroid_repo/.nojekyll || true
 
           mkdir -p fdroid_repo/repo
           mkdir -p fdroid_repo/metadata/com.applify.securepass/en-US/images
 
-          # Locate new signed APK and extract version details
+          # Copy new signed APK and extract version details
           SIGNED_APK=$(find release_apk -type f -name "*.apk" | head -n 1)
           VC=$(aapt dump badging "$SIGNED_APK" | grep versionCode | sed -n "s/.*versionCode='\\([^']*\\)'.*/\\1/p")
           VN=$(aapt dump badging "$SIGNED_APK" | grep versionName | sed -n "s/.*versionName='\\([^']*\\)'.*/\\1/p")
           if [ -z "$VC" ]; then VC="1"; fi
           if [ -z "$VN" ]; then VN="1.0.0"; fi
 
-          # Copy new APK into fdroid_repo/repo/ alongside existing APKs
           cp "$SIGNED_APK" "fdroid_repo/repo/com.applify.securepass_${VC}.apk"
-
-          # Copy metadata and icons
           cp fastlane/metadata/android/en-US/*.txt fdroid_repo/metadata/com.applify.securepass/en-US/ || true
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/metadata/com.applify.securepass/en-US/images/icon.png || true
           cp app/src/main/res/drawable/classic_blue.png fdroid_repo/icon.png || true
@@ -181,17 +178,26 @@ jobs:
           sed -i "s|KEYSTORE_PASS_PLACEHOLDER|${{ secrets.KEYSTORE_PASSWORD }}|" fdroid_repo/config.yml
           sed -i "s|KEY_PASS_PLACEHOLDER|${{ secrets.KEY_PASSWORD }}|" fdroid_repo/config.yml
 
-          # Run fdroid update and signindex on the complete repository
+          # Run fdroid update and signindex inside fdroid_repo/
           cd fdroid_repo
-          chmod 0600 config.yml
+          chmod 0600 config.yml keystore.jks
           fdroid update --pretty
           fdroid signindex
 
-          # Sync repo/ contents to root so both root URL and /repo URL work
+          # VERIFY index signing
+          if [ ! -f index-v1.jar ] && [ ! -f repo/index-v1.jar ] && [ ! -f index-v1.json ]; then
+            echo "CRITICAL ERROR: F-Droid signed index files were NOT generated!"
+            exit 1
+          fi
+
+          # Sync repo/ contents to root
           cp -r repo/* ./
           touch .nojekyll
 
-          # Commit and push updated index and APKs to Applify GitHub Pages repo
+          # EXPLICITLY REMOVE SENSITIVE FILES BEFORE GIT ADD
+          rm -f config.yml keystore.jks ../keystore.jks repo/config.yml repo/keystore.jks
+
+          # Commit and push updated index and APKs to Applify repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
