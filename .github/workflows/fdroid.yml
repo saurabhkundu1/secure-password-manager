@@ -75,10 +75,7 @@ jobs:
 
       - name: Prepare Release Assets & Notes
         run: |
-          VERSION="${{ github.ref_name }}"
-          if [ -z "$VERSION" ] || [ "$VERSION" = "main" ] || [ "$VERSION" = "master" ]; then
-            VERSION="v1.0.1"
-          fi
+          VERSION="${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.1' }}"
           SIGNED_APK=$(find release_apk -type f -name "*.apk" | head -n 1)
           APK_NAME="SecurePass-${VERSION}-signed.apk"
           cp "$SIGNED_APK" "${APK_NAME}"
@@ -111,8 +108,9 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.1' }}
           files: SecurePass-*-signed.apk
-          name: Secure Pass ${{ github.ref_name }}
+          name: Secure Pass ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.1' }}
           body_path: RELEASE_NOTES.md
           draft: false
           prerelease: false
@@ -139,8 +137,7 @@ jobs:
           pip3 install --user fdroidserver
           export PATH=$PATH:$HOME/.local/bin
 
-          VERSION="${{ github.ref_name }}"
-          if [ -z "$VERSION" ]; then VERSION="latest"; fi
+          VERSION="${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.1' }}"
 
           # Decode signing keystore for F-Droid index signing
           echo "${{ secrets.SIGNING_KEY }}" | base64 -d > keystore.jks
