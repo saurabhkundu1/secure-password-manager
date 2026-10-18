@@ -117,9 +117,12 @@ class MainActivity : AppCompatActivity() {
                     enteredCode += value
                     updateDotDisplay()
                     tvError.visibility = View.GONE
+                    if (enteredCode.length == 6) {
+                        processCode(enteredCode)
+                    }
                 }
             } else {
-                // '*' or '#' was tapped - PIN only accepts numbers
+                // '*' or '#' was tapped - PIN accepts numbers only
                 tvError.text = "PIN accepts numbers only"
                 tvError.visibility = View.VISIBLE
             }
@@ -138,6 +141,15 @@ class MainActivity : AppCompatActivity() {
                 updateDotDisplay()
                 tvError.visibility = View.GONE
             }
+        }
+
+        btnDelete.setOnLongClickListener {
+            if (enteredCode.isNotEmpty()) {
+                enteredCode = ""
+                updateDotDisplay()
+                tvError.visibility = View.GONE
+            }
+            true
         }
 
         btnSubmit.setOnClickListener {
@@ -175,6 +187,7 @@ class MainActivity : AppCompatActivity() {
                     enteredCode = ""
                     updateDotDisplay()
                     tvInstruction.text = "Confirm your 6-digit code"
+                    shuffleAndBindNumberPad()
                 } else {
                     if (code == pendingCode) {
                         vaultManager.setupNewVault(code)
@@ -193,6 +206,7 @@ class MainActivity : AppCompatActivity() {
                         enteredCode = ""
                         updateDotDisplay()
                         tvInstruction.text = "Create a 6-digit code"
+                        shuffleAndBindNumberPad()
                     }
                 }
             } else {
@@ -209,6 +223,7 @@ class MainActivity : AppCompatActivity() {
             tvError.visibility = View.VISIBLE
             enteredCode = ""
             updateDotDisplay()
+            shuffleAndBindNumberPad()
         }
     }
 

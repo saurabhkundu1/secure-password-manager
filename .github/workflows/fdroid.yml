@@ -115,142 +115,26 @@ jobs:
           draft: false
           prerelease: false
 
-  deploy-fdroid:
-    name: Deploy to F-Droid Repository
-    needs: build-and-sign
+  dispatch-applify:
+    name: Submit signed release to Applify
+    needs: [build-and-sign, publish-github-release]
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout Source
-        uses: actions/checkout@v4
-
-      - name: Download Signed APK Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: signed-release-apk
-          path: release_apk
-
-      - name: Build & Deploy F-Droid Repository
+      - name: Dispatch to Applify repository
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
+          TAG_NAME: ${{ github.ref_name }}
         run: |
-          sudo apt-get update && sudo apt-get install -y aapt python3-pip python3-setuptools libjpeg-dev zlib1g-dev gettext
-          pip3 install --user fdroidserver
-          export PATH=$PATH:$HOME/.local/bin
-
-          VERSION="${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.1' }}"
-
-          # Decode signing keystore for F-Droid index signing
-          echo "${{ secrets.SIGNING_KEY }}" | base64 -d > keystore.jks
-
-          # Clone existing Applify F-Droid repository FIRST
-          git clone https://x-access-token:${GH_PAT}@github.com/saurabhkundu1/Applify.git fdroid_repo
-
-          # Decode keystore DIRECTLY inside fdroid_repo/
-          echo "${{ secrets.SIGNING_KEY }}" | base64 -d > fdroid_repo/keystore.jks
-
-          # Remove non-APK files in repo/ before fdroid update
-          rm -f fdroid_repo/repo/.nojekyll fdroid_repo/.nojekyll || true
-
-          mkdir -p fdroid_repo/repo
-          mkdir -p fdroid_repo/metadata/com.applify.securepass/en-US/images
-
-          # Copy new signed APK and extract version details
-          SIGNED_APK=$(find release_apk -type f -name "*.apk" | head -n 1)
-          VC=$(aapt dump badging "$SIGNED_APK" | grep versionCode | sed -n "s/.*versionCode='\\([^']*\\)'.*/\\1/p")
-          VN=$(aapt dump badging "$SIGNED_APK" | grep versionName | sed -n "s/.*versionName='\\([^']*\\)'.*/\\1/p")
-          if [ -z "$VC" ]; then VC="1"; fi
-          if [ -z "$VN" ]; then VN="1.0.0"; fi
-
-          cp "$SIGNED_APK" "fdroid_repo/repo/com.applify.securepass_${VC}.apk"
-          cp fastlane/metadata/android/en-US/*.txt fdroid_repo/metadata/com.applify.securepass/en-US/ || true
-          cp app/src/main/res/drawable/classic_blue.png fdroid_repo/metadata/com.applify.securepass/en-US/images/icon.png || true
-          cp app/src/main/res/drawable/classic_blue.png fdroid_repo/icon.png || true
-
-          # Copy static metadata template and inject version info
-          cp metadata/com.applify.securepass.yml fdroid_repo/metadata/com.applify.securepass.yml
-          sed -i "s|CurrentVersion: .*|CurrentVersion: \"${VN}\"|" fdroid_repo/metadata/com.applify.securepass.yml
-          sed -i "s|CurrentVersionCode: .*|CurrentVersionCode: ${VC}|" fdroid_repo/metadata/com.applify.securepass.yml
-
-          # Copy static config template and inject parameters
-          cp fdroid_config.template fdroid_repo/config.yml
-          sed -i "s|SDK_PATH_PLACEHOLDER|${ANDROID_HOME}|" fdroid_repo/config.yml
-          sed -i "s|KEY_ALIAS_PLACEHOLDER|${{ secrets.KEY_ALIAS }}|" fdroid_repo/config.yml
-          sed -i "s|KEYSTORE_PASS_PLACEHOLDER|${{ secrets.KEYSTORE_PASSWORD }}|" fdroid_repo/config.yml
-          sed -i "s|KEY_PASS_PLACEHOLDER|${{ secrets.KEY_PASSWORD }}|" fdroid_repo/config.yml
-
-          # Run fdroid update and signindex inside fdroid_repo/
-          cd fdroid_repo
-          chmod 0600 config.yml keystore.jks
-          fdroid update --pretty
-          fdroid signindex
-
-          # VERIFY index signing
-          if [ ! -f index-v1.jar ] && [ ! -f repo/index-v1.jar ] && [ ! -f index-v1.json ]; then
-            echo "CRITICAL ERROR: F-Droid signed index files were NOT generated!"
-            exit 1
-          fi
-
-          # Sync repo/ contents to root
-          cp -r repo/* ./
-          touch .nojekyll
-
-          # EXPLICITLY REMOVE SENSITIVE FILES BEFORE GIT ADD
-          rm -f config.yml keystore.jks ../keystore.jks repo/config.yml repo/keystore.jks
-
-          # Create GitHub Pages deployment workflow inside Applify repo so GitHub Pages automatically deploys on every update
-          mkdir -p .github/workflows
-          python3 - << 'PYEOF'
-          import textwrap
-          content = textwrap.dedent('''\
-          name: Deploy GitHub Pages
-
-          on:
-            push:
-              branches: [ main ]
-            workflow_dispatch:
-
-          permissions:
-            contents: read
-            pages: write
-            id-token: write
-
-          concurrency:
-            group: "pages"
-            cancel-in-progress: true
-
-          jobs:
-            deploy:
-              environment:
-                name: github-pages
-                url: ${{ steps.deployment.outputs.page_url }}
-              runs-on: ubuntu-24.04
-              steps:
-                - name: Checkout Source
-                  uses: actions/checkout@v4
-
-                - name: Setup Pages
-                  uses: actions/configure-pages@v5
-
-                - name: Upload Artifact
-                  uses: actions/upload-pages-artifact@v3
-                  with:
-                    path: '.'
-
-                - name: Deploy to GitHub Pages
-                  id: deployment
-                  uses: actions/deploy-pages@v4
-          ''')
-          with open('.github/workflows/pages.yml', 'w') as f:
-              f.write(content)
-          PYEOF
-
-          # Commit and push updated index, APKs, and pages workflow to Applify repo
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          if ! git diff --staged --quiet; then
-            git commit -m "Update F-Droid repo ${VERSION} (versionCode ${VC}) and trigger Pages deployment"
-            git push origin main
-          else
-            echo "No changes to commit in Applify repository."
-          fi
+          set -euo pipefail
+          VERSION="${TAG_NAME#v}"
+          ASSET_NAME="SecurePass-${TAG_NAME}-signed.apk"
+          jq -n --arg version "$VERSION" --arg tag "$TAG_NAME" --arg asset "$ASSET_NAME" '{event_type:"new_release",client_payload:{source_repo:"saurabhkundu1/secure-password-manager",package_name:"com.applify.securepass",version:$version,version_code:"3",tag:$tag,asset_name:$asset}}' > "$RUNNER_TEMP/applify-dispatch.json"
+          curl --fail-with-body --silent --show-error \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_PAT" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -H "Content-Type: application/json" \
+            --data-binary "@$RUNNER_TEMP/applify-dispatch.json" \
+            https://api.github.com/repos/saurabhkundu1/Applify/dispatches

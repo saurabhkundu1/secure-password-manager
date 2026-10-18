@@ -1,0 +1,3 @@
+- Added automatic submission after the sixth PIN digit.
+- Added long-press clear for the PIN entry screen.
+- Refreshes the randomized keypad after vault setup and failed unlock attempts.
