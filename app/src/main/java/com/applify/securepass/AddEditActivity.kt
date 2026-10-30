@@ -28,6 +28,7 @@ class AddEditActivity : BaseLockActivity() {
     private lateinit var etWebsite: TextInputEditText
     private lateinit var etUsername: TextInputEditText
     private lateinit var etPassword: TextInputEditText
+    private lateinit var etTotpSecret: TextInputEditText
     private lateinit var etNotes: TextInputEditText
     private lateinit var progressStrength: ProgressBar
     private lateinit var tvStrengthText: TextView
@@ -47,6 +48,7 @@ class AddEditActivity : BaseLockActivity() {
         etWebsite = findViewById(R.id.etWebsite)
         etUsername = findViewById(R.id.etUsername)
         etPassword = findViewById(R.id.etPassword)
+        etTotpSecret = findViewById(R.id.etTotpSecret)
         etNotes = findViewById(R.id.etNotes)
         progressStrength = findViewById(R.id.progressStrength)
         tvStrengthText = findViewById(R.id.tvStrengthText)
@@ -58,6 +60,9 @@ class AddEditActivity : BaseLockActivity() {
 
         if (intent.hasExtra("ITEM_ID")) {
             editingItemId = intent.getStringExtra("ITEM_ID")
+            findViewById<TextView>(R.id.tvFormTitle).text = "Edit login"
+            findViewById<TextView>(R.id.tvFormSubtitle).text = "Update this entry in your encrypted vault."
+            btnSave.text = "Save changes"
             editingItemId?.let { loadExistingItem(it) }
         }
 
@@ -107,6 +112,7 @@ class AddEditActivity : BaseLockActivity() {
                     etWebsite.setText(item.website)
                     etUsername.setText(item.username)
                     etPassword.setText(item.password)
+                    etTotpSecret.setText(item.totpSecret)
                     etNotes.setText(item.notes)
                     break
                 }
@@ -120,11 +126,20 @@ class AddEditActivity : BaseLockActivity() {
         val website = etWebsite.text?.toString()?.trim() ?: ""
         val username = etUsername.text?.toString()?.trim() ?: ""
         val password = etPassword.text?.toString() ?: ""
+        val totpSecret = etTotpSecret.text?.toString()?.trim() ?: ""
         val notes = etNotes.text?.toString()?.trim() ?: ""
 
         if (website.isEmpty() || username.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Please fill all required fields", Toast.LENGTH_SHORT).show()
             return
+        }
+        if (totpSecret.isNotEmpty()) {
+            try {
+                Totp.code(totpSecret)
+            } catch (e: IllegalArgumentException) {
+                Toast.makeText(this, e.message ?: "Invalid authenticator secret", Toast.LENGTH_LONG).show()
+                return
+            }
         }
 
         try {
@@ -141,13 +156,14 @@ class AddEditActivity : BaseLockActivity() {
                         item.website = website
                         item.username = username
                         item.password = password
+                        item.totpSecret = totpSecret
                         item.notes = notes
                         item.lastChanged = System.currentTimeMillis()
                         break
                     }
                 }
             } else {
-                entries.add(VaultItem(website, username, password, notes))
+                entries.add(VaultItem(website, username, password, notes).apply { this.totpSecret = totpSecret })
             }
 
             vaultManager.saveEntries(entries)

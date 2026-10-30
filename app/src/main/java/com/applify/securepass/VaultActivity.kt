@@ -13,6 +13,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -38,6 +39,7 @@ class VaultActivity : BaseLockActivity() {
     private val allEntries: MutableList<VaultItem> = ArrayList()
     private var userCode: String? = null // may be null if unlocked via biometric
     private lateinit var btnAddFirst: Button
+    private lateinit var tvVaultCount: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeHelper.applyTheme(this)
@@ -55,6 +57,7 @@ class VaultActivity : BaseLockActivity() {
         etSearch = findViewById(R.id.etSearch)
         val fabAdd: FloatingActionButton = findViewById(R.id.fabAdd)
         btnAddFirst = findViewById(R.id.btnAddFirst)
+        tvVaultCount = findViewById(R.id.tvVaultCount)
 
         // Empty-state button click -> open AddEditActivity
         btnAddFirst.setOnClickListener {
@@ -138,6 +141,7 @@ class VaultActivity : BaseLockActivity() {
         try {
             allEntries.clear()
             allEntries.addAll(vaultManager.loadEntries())
+            tvVaultCount.text = "${allEntries.size}\n${if (allEntries.size == 1) "item" else "items"}"
             filterEntries(etSearch.text?.toString() ?: "")
             toggleEmptyState()
         } catch (e: Exception) {

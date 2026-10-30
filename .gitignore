@@ -7,6 +7,8 @@
 *.aab
 *.dex
 *.iml
+*.jks
+*.keystore
 
 # Android Studio and local tooling
 .idea/

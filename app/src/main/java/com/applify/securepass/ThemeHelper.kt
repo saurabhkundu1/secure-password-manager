@@ -11,6 +11,23 @@ object ThemeHelper {
     private const val KEY_THEME_MODE = "theme_mode" // 0=light, 1=dark, 2=system
     private const val KEY_COLOR_PALETTE = "color_palette" // 0=teal, 1=blue, 2=green, 3=purple, 4=red, 5=amber, ...
 
+    val iconOptions = arrayOf(
+        "Teal (Default)", "Classic Blue", "Forest Green", "Royal Purple", "Crimson Red", "Amber Gold",
+        "Indigo", "Pink", "Onyx", "Yellow", "Cyan", "Brown", "Grey"
+    )
+
+    private val iconAliases = arrayOf(
+        "Teal", "Blue", "Green", "Purple", "Red", "Amber", "Indigo",
+        "Pink", "Onyx", "Yellow", "Cyan", "Brown", "Grey"
+    )
+    private val themeIcons = intArrayOf(
+        R.mipmap.ic_launcher_teal, R.mipmap.ic_launcher_blue, R.mipmap.ic_launcher_green,
+        R.mipmap.ic_launcher_purple, R.mipmap.ic_launcher_red, R.mipmap.ic_launcher_amber,
+        R.mipmap.ic_launcher_indigo, R.mipmap.ic_launcher_pink, R.mipmap.ic_launcher_onyx,
+        R.mipmap.ic_launcher_yellow, R.mipmap.ic_launcher_cyan, R.mipmap.ic_launcher_brown,
+        R.mipmap.ic_launcher_grey
+    )
+
     /**
      * Applies the saved theme mode (light/dark/system) and color palette to the activity.
      * This must be called BEFORE super.onCreate() and setContentView().
@@ -63,14 +80,7 @@ object ThemeHelper {
      */
     @JvmStatic
     fun getThemeIconResId(palette: Int): Int {
-        return when (palette) {
-            1 -> R.drawable.classic_blue
-            2 -> R.drawable.forest_green
-            3 -> R.drawable.royal_purple
-            4 -> R.drawable.crimson_red
-            5 -> R.drawable.amber_gold
-            else -> R.drawable.classic_blue
-        }
+        return themeIcons.getOrElse(palette) { themeIcons[0] }
     }
 
     /**
@@ -91,36 +101,22 @@ object ThemeHelper {
         val pm = context.packageManager
         val pkg = context.packageName
 
-        // Map icon index to launcher activity alias name
-        val activeAlias = when (iconIndex) {
-            1 -> "$pkg.MainActivityBlue"
-            2 -> "$pkg.MainActivityGreen"
-            3 -> "$pkg.MainActivityPurple"
-            4 -> "$pkg.MainActivityRed"
-            5 -> "$pkg.MainActivityAmber"
-            else -> "$pkg.MainActivityBlue" // Default alias
-        }
-
-        val allAliases = arrayOf(
-            "$pkg.MainActivityBlue",
-            "$pkg.MainActivityGreen",
-            "$pkg.MainActivityPurple",
-            "$pkg.MainActivityRed",
-            "$pkg.MainActivityAmber"
+        val activeAlias = "$pkg.MainActivity${iconAliases.getOrElse(iconIndex) { iconAliases[0] }}"
+        pm.setComponentEnabledSetting(
+            ComponentName(pkg, activeAlias),
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+            PackageManager.DONT_KILL_APP
         )
 
-        for (alias in allAliases) {
-            val state = if (alias == activeAlias) {
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-            } else {
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+        for (suffix in iconAliases) {
+            val alias = "$pkg.MainActivity$suffix"
+            if (alias != activeAlias) {
+                pm.setComponentEnabledSetting(
+                    ComponentName(pkg, alias),
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP
+                )
             }
-
-            pm.setComponentEnabledSetting(
-                ComponentName(pkg, alias),
-                state,
-                PackageManager.DONT_KILL_APP
-            )
         }
     }
 

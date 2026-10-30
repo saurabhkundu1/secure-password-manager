@@ -85,6 +85,9 @@ class SettingsActivity : BaseLockActivity() {
         val tvLastCodeTime: TextView = findViewById(R.id.tvLastCodeTime)
         val btnChangeCode: Button = findViewById(R.id.btnChangeCode)
         btnLockVault = findViewById(R.id.btnLockVault)
+        findViewById<Button>(R.id.btnAutofill).setOnClickListener {
+            startActivity(Intent(android.provider.Settings.ACTION_REQUEST_SET_AUTOFILL_SERVICE, "package:$packageName".toUri()))
+        }
 
         // Theme controls
         rgThemeMode = findViewById(R.id.rgThemeMode)
@@ -253,11 +256,10 @@ class SettingsActivity : BaseLockActivity() {
             }
         }
 
-        val iconOptions = arrayOf("Teal (Default)", "Classic Blue", "Forest Green", "Royal Purple", "Crimson Red", "Amber Gold")
-        val iconAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, iconOptions)
+        val iconAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ThemeHelper.iconOptions)
         iconAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerAppIcon.adapter = iconAdapter
-        val currentIconIndex = prefs.getInt("custom_app_icon", 0)
+        val currentIconIndex = prefs.getInt("custom_app_icon", 0).coerceIn(ThemeHelper.iconOptions.indices)
         spinnerAppIcon.setSelection(currentIconIndex)
 
         spinnerAppIcon.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -270,6 +272,11 @@ class SettingsActivity : BaseLockActivity() {
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
+
+        ThemeHelper.updateAppIcon(
+            this,
+            if (syncEnabled) prefs.getInt(KEY_COLOR_PALETTE, 0) else currentIconIndex
+        )
 
         // Swipe Options with distinct color trail indicators (8 Actions)
         val swipeOptions = arrayOf(
@@ -313,7 +320,7 @@ class SettingsActivity : BaseLockActivity() {
         llColorPalette.removeAllViews()
         val currentPalette = prefs.getInt(KEY_COLOR_PALETTE, 0)
 
-        for (i in PALETTE_COLORS.indices) {
+        for (i in PALETTE_COLOR_RES_IDS.indices) {
             val colorCircle = View(this)
             val size = resources.getDimension(androidx.appcompat.R.dimen.abc_action_bar_default_height_material).toInt() / 2
             val params = GridLayout.LayoutParams()
@@ -321,7 +328,7 @@ class SettingsActivity : BaseLockActivity() {
             params.height = size
             params.setMargins(16, 16, 16, 16)
             colorCircle.layoutParams = params
-            colorCircle.setBackgroundColor(PALETTE_COLORS[i])
+            colorCircle.setBackgroundColor(getColor(PALETTE_COLOR_RES_IDS[i]))
             if (i == currentPalette) {
                 colorCircle.setBackgroundResource(androidx.appcompat.R.drawable.abc_btn_colored_material)
             }
@@ -442,7 +449,7 @@ class SettingsActivity : BaseLockActivity() {
 
             val base64Backup = Base64.getEncoder().encodeToString(buffer.array())
 
-            contentResolver.openOutputStream(uri)?.use { os: OutputStream ->
+            checkNotNull(contentResolver.openOutputStream(uri)) { "Could not open the selected backup destination" }.use { os: OutputStream ->
                 os.write(base64Backup.toByteArray(StandardCharsets.UTF_8))
             }
             Toast.makeText(this, "Backup exported successfully", Toast.LENGTH_SHORT).show()
@@ -471,7 +478,7 @@ class SettingsActivity : BaseLockActivity() {
                 }
                 try {
                     val base64Data = StringBuilder()
-                    contentResolver.openInputStream(uri)?.use { isStream: InputStream ->
+                    checkNotNull(contentResolver.openInputStream(uri)) { "Could not open the selected backup file" }.use { isStream: InputStream ->
                         val reader = isStream.bufferedReader(StandardCharsets.UTF_8)
                         reader.forEachLine { line -> base64Data.append(line) }
                     }
@@ -521,20 +528,20 @@ class SettingsActivity : BaseLockActivity() {
             30 * 60 * 1000L
         )
 
-        private val PALETTE_COLORS = intArrayOf(
-            -0xe0322d, // Teal
-            -0xd7631b, // Blue
-            -0xb350a2, // Green
-            -0x75cd27, // Purple
-            -0x2cd0d3, // Red
-            -0x12bb2,  // Orange
-            -0xc6820f, // Indigo
-            -0x117a22, // Pink
-            -0xdcdcdc, // Onyx
-            -0x900,    // Yellow
-            -0xe05f01, // Cyan
-            -0x82a5b6, // Brown
-            -0x878788  // Grey
+        private val PALETTE_COLOR_RES_IDS = intArrayOf(
+            R.color.palette_teal_primary,
+            R.color.palette_blue_primary,
+            R.color.palette_green_primary,
+            R.color.palette_purple_primary,
+            R.color.palette_red_primary,
+            R.color.palette_amber_primary,
+            R.color.palette_indigo_primary,
+            R.color.palette_pink_primary,
+            R.color.palette_onyx_primary,
+            R.color.palette_yellow_primary,
+            R.color.palette_cyan_primary,
+            R.color.palette_brown_primary,
+            R.color.palette_grey_primary
         )
     }
 }

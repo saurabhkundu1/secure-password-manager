@@ -6,7 +6,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center_horizontal"
-    android:paddingTop="20dp"
+    android:background="?android:attr/colorBackground"
+    android:paddingTop="28dp"
     android:paddingStart="24dp"
     android:paddingEnd="24dp"
     android:fitsSystemWindows="true">
@@ -14,20 +15,30 @@
     <!-- App Icon -->
     <ImageView
         android:id="@+id/ivLockIcon"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:src="@drawable/classic_blue"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:src="@mipmap/ic_launcher_teal"
         android:scaleType="fitCenter"
         android:adjustViewBounds="true"
         android:contentDescription="Secure Pass"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="10dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="3dp"
+        android:letterSpacing="0.12"
+        android:text="PRIVATE BY DESIGN"
+        android:textColor="?attr/colorPrimary"
+        android:textSize="12sp"
+        android:textStyle="bold" />
 
     <!-- Title -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Secure Pass"
-        android:textSize="24sp"
+        android:textSize="28sp"
         android:textColor="?attr/colorPrimary"
         android:textStyle="bold"
         android:layout_marginBottom="4dp"/>
@@ -40,7 +51,7 @@
         android:text="Enter your 6-digit code"
         android:textSize="16sp"
         android:textColor="?android:attr/textColorSecondary"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="18dp"/>
 
     <!-- 6-dot PIN display -->
     <LinearLayout
@@ -48,7 +59,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="18dp"
+        android:paddingStart="8dp"
+        android:paddingTop="3dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="3dp"
+        android:background="@drawable/pin_track_background">
     </LinearLayout>
 
     <!-- Number Pad in a GridLayout (3 columns x 5 rows) -->

@@ -5,12 +5,9 @@ on:
     tags:
       - 'v*'
       - 'V*'
-  workflow_dispatch:
 
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read
 
 jobs:
   build-and-sign:
@@ -18,13 +15,21 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
-      - name: Set up JDK 17 with Gradle Cache
-        uses: actions/setup-java@v5
+      - name: Validate replacement signing identity
+        env:
+          EXPECTED_SIGNER_SHA256: ${{ vars.EXPECTED_SIGNER_SHA256 }}
+        run: |
+          set -euo pipefail
+          [[ "$EXPECTED_SIGNER_SHA256" =~ ^[A-Fa-f0-9]{64}$ ]]
+          [[ "${EXPECTED_SIGNER_SHA256^^}" != "DE62E0D386DB9B6FC616ADF6573F458AAC8D04F873007C73B8585FBEEF0960255" ]]
+
+      - name: Set up JDK 21 with Gradle Cache
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
           cache: 'gradle'
 
       - name: Grant Execute Permission to Gradlew
@@ -38,22 +43,37 @@ jobs:
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;29.0.3" "build-tools;35.0.0"
 
       - name: Sign APK with Android SDK apksigner
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: securepass-recovery
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          EXPECTED_SIGNER_SHA256: ${{ vars.EXPECTED_SIGNER_SHA256 }}
         run: |
-          echo "${{ secrets.SIGNING_KEY }}" | base64 -d > release.jks
+          set -euo pipefail
+          umask 077
+          trap 'rm -f release.jks' EXIT
+          printf '%s' "$SIGNING_KEY" | base64 -d > release.jks
           UNSIGNED_APK=$(find app/build/outputs/apk/release -type f -name "*.apk" | head -n 1)
           
           BUILD_TOOLS_DIR=$(ls -d $ANDROID_HOME/build-tools/* | tail -n 1)
+          ACTUAL_PACKAGE=$("$BUILD_TOOLS_DIR/aapt" dump badging "$UNSIGNED_APK" | sed -n "s/^package: name='\([^']*\)'.*/\1/p")
+          test "$ACTUAL_PACKAGE" = "com.applify.securepass"
           "$BUILD_TOOLS_DIR/zipalign" -v -p 4 "$UNSIGNED_APK" app-release-aligned.apk
           "$BUILD_TOOLS_DIR/apksigner" sign --ks release.jks \
-            --ks-pass pass:"${{ secrets.KEYSTORE_PASSWORD }}" \
-            --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
-            --key-pass pass:"${{ secrets.KEY_PASSWORD }}" \
+            --ks-pass env:KEYSTORE_PASSWORD \
+            --ks-key-alias "$KEY_ALIAS" \
+            --key-pass env:KEY_PASSWORD \
             --out app-release-signed.apk app-release-aligned.apk
+
+          SIGNER_SHA256=$("$BUILD_TOOLS_DIR/apksigner" verify --print-certs app-release-signed.apk | awk -F': ' '/certificate SHA-256 digest:/ {print $2; exit}' | tr -d ':' | tr '[:lower:]' '[:upper:]')
+          EXPECTED_SHA256=$(printf '%s' "$EXPECTED_SIGNER_SHA256" | tr -d ':' | tr '[:lower:]' '[:upper:]')
+          test -n "$SIGNER_SHA256"
+          test "$SIGNER_SHA256" = "$EXPECTED_SHA256"
           
-          rm -f release.jks
 
       - name: Upload Signed APK Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: signed-release-apk
           path: app-release-signed.apk
@@ -63,19 +83,23 @@ jobs:
     name: Publish GitHub Release
     needs: build-and-sign
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Download Signed APK Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: signed-release-apk
           path: release_apk
 
       - name: Prepare Release Assets & Notes
+        env:
+          TAG_NAME: ${{ github.ref_name }}
         run: |
-          VERSION="${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.1' }}"
+          VERSION="$TAG_NAME"
           SIGNED_APK=$(find release_apk -type f -name "*.apk" | head -n 1)
           APK_NAME="SecurePass-${VERSION}-signed.apk"
           cp "$SIGNED_APK" "${APK_NAME}"
@@ -94,6 +118,9 @@ jobs:
           - **Mandatory 6-Digit Backup Key**: Enforced 6-character backup encryption password policy.
           - **8 Custom Swipe Actions**: Configurable swipe gestures with fading color trails.
 
+          ### Signing-key migration
+          This release keeps package ID `com.applify.securepass` and uses the replacement signing key. Export an encrypted vault backup, uninstall the previously installed copy, install this release, and import the backup.
+
           ---
 
           ### 📦 Verified Release Package
@@ -106,11 +133,11 @@ jobs:
           EOF
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.1' }}
+          tag_name: ${{ github.ref_name }}
           files: SecurePass-*-signed.apk
-          name: Secure Pass ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.1' }}
+          name: Secure Pass ${{ github.ref_name }}
           body_path: RELEASE_NOTES.md
           draft: false
           prerelease: false
@@ -121,6 +148,9 @@ jobs:
     if: github.ref_type == 'tag'
     runs-on: ubuntu-24.04
     steps:
+      - name: Checkout Source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
       - name: Dispatch to Applify repository
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
@@ -128,8 +158,11 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${TAG_NAME#v}"
+          VERSION_CODE=$(sed -n 's/^[[:space:]]*versionCode = \([0-9][0-9]*\).*/\1/p' app/build.gradle | head -n 1)
+          PACKAGE_NAME="com.applify.securepass"
+          test -n "$VERSION_CODE"
           ASSET_NAME="SecurePass-${TAG_NAME}-signed.apk"
-          jq -n --arg version "$VERSION" --arg tag "$TAG_NAME" --arg asset "$ASSET_NAME" '{event_type:"new_release",client_payload:{source_repo:"saurabhkundu1/secure-password-manager",package_name:"com.applify.securepass",version:$version,version_code:"3",tag:$tag,asset_name:$asset}}' > "$RUNNER_TEMP/applify-dispatch.json"
+          jq -n --arg version "$VERSION" --arg tag "$TAG_NAME" --arg asset "$ASSET_NAME" --arg package "$PACKAGE_NAME" --arg version_code "$VERSION_CODE" '{event_type:"new_release",client_payload:{source_repo:"saurabhkundu1/secure-password-manager",package_name:$package,version:$version,version_code:$version_code,tag:$tag,asset_name:$asset}}' > "$RUNNER_TEMP/applify-dispatch.json"
           curl --fail-with-body --silent --show-error \
             -X POST \
             -H "Accept: application/vnd.github+json" \

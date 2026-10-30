@@ -11,6 +11,7 @@ class VaultItem {
     @JvmField var username: String = ""
     @JvmField var password: String = ""
     @JvmField var notes: String = ""
+    @JvmField var totpSecret: String = ""
     @JvmField var isFavorite: Boolean = false
     @JvmField var createdAt: Long = 0L
     @JvmField var lastChanged: Long = 0L

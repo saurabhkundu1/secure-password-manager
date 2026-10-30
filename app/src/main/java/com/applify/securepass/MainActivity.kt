@@ -3,7 +3,6 @@ package com.applify.securepass
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.widget.Button
@@ -86,12 +85,6 @@ class MainActivity : AppCompatActivity() {
         // Initialize dot display
         updateDotDisplay()
 
-        // Security check: Log vault file info
-        val vaultFile = File(filesDir, "vault.txt")
-        if (vaultFile.exists()) {
-            Log.d("SecurePass", "Vault file detected: " + vaultFile.absolutePath)
-            Log.d("SecurePass", "File size: " + vaultFile.length() + " bytes")
-        }
     }
 
     override fun onResume() {

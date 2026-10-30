@@ -6,9 +6,12 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.BufferedReader
 import java.io.File
-import java.io.FileReader
-import java.io.FileWriter
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.IOException
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.lang.reflect.Type
 import java.security.SecureRandom
 import java.util.Base64
@@ -50,20 +53,32 @@ class VaultManager {
     // ---------- Setup & Unlock ----------
     @Throws(Exception::class)
     fun setupNewVault(userCode: String) {
+        require(userCode.matches(Regex("[0-9]{6}"))) { "Vault PIN must contain exactly six digits" }
+        check(!File(baseDir, SALT_FILE).exists() && !File(baseDir, VAULT_FILE).exists()) { "Vault data already exists" }
         val salt = ByteArray(16)
         SecureRandom().nextBytes(salt)
         saveSalt(salt)
-        currentKey = CryptoManager.deriveKey(userCode, salt)
-        setGlobalKey(currentKey) // share the key
-        saveEntries(ArrayList())
+        val key = CryptoManager.deriveKey(userCode, salt)
+        try {
+            writeEntries(emptyList(), key)
+        } catch (e: Exception) {
+            File(baseDir, SALT_FILE).delete()
+            throw e
+        }
+        currentKey = key
+        setGlobalKey(key)
     }
 
     @Throws(Exception::class)
     fun unlock(userCode: String) {
-        if (isUnlocked()) return
+        require(userCode.matches(Regex("[0-9]{6}"))) { "Vault PIN must contain exactly six digits" }
         val salt = loadSalt()
-        currentKey = CryptoManager.deriveKey(userCode, salt)
-        setGlobalKey(currentKey) // share the key
+        val candidateKey = CryptoManager.deriveKey(userCode, salt)
+        val file = File(baseDir, VAULT_FILE)
+        if (!file.exists()) throw IOException("Vault data is missing")
+        CryptoManager.decrypt(readFile(file), candidateKey)
+        currentKey = candidateKey
+        setGlobalKey(candidateKey) // share the key
     }
 
     /**
@@ -72,6 +87,7 @@ class VaultManager {
      */
     @Throws(Exception::class)
     fun changeMasterCode(oldCode: String, newCode: String) {
+        require(newCode.matches(Regex("[0-9]{6}"))) { "Vault PIN must contain exactly six digits" }
         // Unlock with old code (this sets currentKey and globalKey)
         unlock(oldCode)
 
@@ -82,12 +98,9 @@ class VaultManager {
         val salt = loadSalt()
         val newKey = CryptoManager.deriveKey(newCode, salt)
 
-        // Replace the key
+        writeEntries(entries, newKey)
         currentKey = newKey
         setGlobalKey(newKey)
-
-        // Re-save entries with the new key
-        saveEntries(entries)
     }
 
     // ---------- Vault Operations ----------
@@ -105,6 +118,10 @@ class VaultManager {
     @Throws(Exception::class)
     fun saveEntries(entries: List<VaultItem>) {
         val key = getCurrentKey() ?: throw IllegalStateException("Vault not unlocked!")
+        writeEntries(entries, key)
+    }
+
+    private fun writeEntries(entries: List<VaultItem>, key: SecretKey) {
         val json = gson.toJson(entries)
         val encrypted = CryptoManager.encrypt(json, key)
         val file = File(baseDir, VAULT_FILE)
@@ -149,20 +166,24 @@ class VaultManager {
 
     @Throws(IOException::class)
     private fun readFile(file: File): String {
-        val sb = StringBuilder()
-        BufferedReader(FileReader(file)).use { br ->
-            var line: String?
-            while (br.readLine().also { line = it } != null) {
-                sb.append(line)
-            }
-        }
-        return sb.toString()
+        return BufferedReader(FileInputStream(file).reader(StandardCharsets.UTF_8)).use { it.readText() }
     }
 
     @Throws(IOException::class)
     private fun writeFile(file: File, content: String) {
-        FileWriter(file).use { fw ->
-            fw.write(content)
+        val tempFile = File(file.parentFile, "${file.name}.tmp")
+        try {
+            FileOutputStream(tempFile).use { output ->
+                output.write(content.toByteArray(StandardCharsets.UTF_8))
+                output.fd.sync()
+            }
+            Files.move(
+                tempFile.toPath(), file.toPath(),
+                StandardCopyOption.ATOMIC_MOVE,
+                StandardCopyOption.REPLACE_EXISTING,
+            )
+        } finally {
+            tempFile.delete()
         }
     }
 

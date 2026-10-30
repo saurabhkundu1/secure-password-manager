@@ -295,6 +295,14 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:textColor="#D32F2F"/>
 
+              <Button
+                  android:id="@+id/btnAutofill"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="Set up Autofill"
+                  style="@style/Widget.MaterialComponents.Button.TextButton"
+                  android:textColor="?attr/colorPrimary"/>
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

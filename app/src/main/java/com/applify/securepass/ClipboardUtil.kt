@@ -20,7 +20,7 @@ object ClipboardUtil {
         val clip = ClipData.newPlainText(label, text)
         clipboard.setPrimaryClip(clip)
 
-        Toast.makeText(context, "Password copied", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
 
         Handler(Looper.getMainLooper()).postDelayed({
             // Only clear if the content is still what we copied

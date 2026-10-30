@@ -3,41 +3,42 @@ plugins {
 }
 
 android {
-    namespace 'com.applify.securepass'
-    compileSdk 36
+    namespace = 'com.applify.securepass'
+    compileSdk = 36
 
     defaultConfig {
-        applicationId "com.applify.securepass"
-        minSdk 26
-        targetSdk 35
-        versionCode 3
-        versionName "1.0.2"
+        applicationId = "com.applify.securepass"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 4
+        versionName = "1.0.3"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
         release {
             // Priority: Environment Variable > Gradle Property > Default file
-            def ksPath = System.getenv("KEYSTORE_PATH") ?: (project.findProperty("KEYSTORE_PATH") ?: "../secure-pass-key.jks")
-            def ksFile = file(ksPath)
+            def ksPath = System.getenv("KEYSTORE_PATH") ?: project.findProperty("KEYSTORE_PATH")
             def ksPass = System.getenv("KEYSTORE_PASSWORD") ?: project.findProperty("KEYSTORE_PASSWORD")
             def kAlias = System.getenv("KEY_ALIAS") ?: project.findProperty("KEY_ALIAS")
             def kPass = System.getenv("KEY_PASSWORD") ?: project.findProperty("KEY_PASSWORD")
 
-            // Only configure if all properties are present and file exists
-            if (ksFile.exists() && ksPass && kAlias && kPass) {
-                storeFile ksFile
-                storePassword ksPass
-                keyAlias kAlias
-                keyPassword kPass
+            if (ksPath) {
+                def ksFile = file(ksPath)
+                if (ksFile.exists() && ksPass && kAlias && kPass) {
+                    storeFile ksFile
+                    storePassword ksPass
+                    keyAlias kAlias
+                    keyPassword kPass
+                }
             }
         }
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled = false
             // Dynamically assign signing config only if it was configured above
             if (signingConfigs.release.storeFile != null) {
                 signingConfig signingConfigs.release
@@ -46,8 +47,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 

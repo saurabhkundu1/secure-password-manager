@@ -6,6 +6,8 @@
 An offline, high-security encrypted password manager for Android.  
 Store your credentials safely in a local, encrypted vault using **AES-256-GCM**, unlocked via a **6-digit PIN** or **Biometrics**.
 
+> **Signing-key migration:** The previous app-signing key was exposed in public Git history and must not sign new releases. The replacement release keeps the package ID `com.applify.securepass` and uses a new signer. Export an encrypted vault backup, uninstall the old app, then install the replacement from Applify. Android requires uninstalling first because the signer changed; import the backup after installation.
+
 ## 🚀 Features
 
 - 🔒 **Total Privacy** – 100% offline. No internet permissions required. Your data never leaves your device.
@@ -20,7 +22,9 @@ Store your credentials safely in a local, encrypted vault using **AES-256-GCM**,
 - 🎲 **Password Utilities** – 
   - **Generator**: Create cryptographically strong passwords with customizable length and character sets.
   - **Strength Indicator**: Real-time visual feedback on your password's complexity.
-- 📁 **Encrypted Backups** – Export and import your vault as an encrypted Base64 text file (`vault.txt`) for secure portability.
+- 🔑 **Autofill** – Enable SecurePass from Android's Autofill settings; matching saved logins are offered after PIN unlock.
+- ⏱️ **Authenticator Codes** – Store a Base32 secret or paste an `otpauth://` URI in the encrypted vault, then copy its current six-digit code from the entry menu.
+- 📁 **Encrypted Backups** – Export and import your vault as an encrypted Base64 text file (`vault.txt`). Android cloud/device backup is disabled; use the app's encrypted export when migrating devices.
 - 🛠️ **Offline Support** – Built-in links to GitHub Releases and Issues for updates and feedback, maintaining your privacy without requiring app internet access.
 
 ## 🛠️ Technical Details
@@ -52,8 +56,7 @@ Store your credentials safely in a local, encrypted vault using **AES-256-GCM**,
    ```
    The APK will be generated at `app/build/outputs/apk/debug/app-debug.apk`.
 
-> **⚠️ Note for Droidify/F-Droid Users:**  
-> If you encounter validation errors like *"Couldn't validate Secure Pass"* or *"Couldn't check integrity"*, this is because the app is signed with a debug key when built locally or via third-party stores. For verified builds, please download the official release APK directly from the [Releases page](https://github.com/saurabhkundu1/secure-password-manager/releases), which is signed with the developer's release key.
+> **Droidify migration:** Keep using the same Applify repository. Before installing the replacement signed release, export an encrypted vault backup, uninstall the old Secure Pass, then install `com.applify.securepass` again from Droidify and import the backup. The old signer cannot be used for future releases.
 
 ## 🤝 Contribution
 
