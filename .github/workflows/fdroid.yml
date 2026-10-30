@@ -19,7 +19,7 @@ jobs:
 
       - name: Validate replacement signing identity
         env:
-          EXPECTED_SIGNER_SHA256: ${{ vars.EXPECTED_SIGNER_SHA256 }}
+          EXPECTED_SIGNER_SHA256: 41941F5086C0F8EF03C58DFB1B148F4244258362EC2DA51F1348C10E8DDEDE1F
         run: |
           set -euo pipefail
           [[ "$EXPECTED_SIGNER_SHA256" =~ ^[A-Fa-f0-9]{64}$ ]]
@@ -48,7 +48,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: securepass-recovery
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          EXPECTED_SIGNER_SHA256: ${{ vars.EXPECTED_SIGNER_SHA256 }}
+          EXPECTED_SIGNER_SHA256: 41941F5086C0F8EF03C58DFB1B148F4244258362EC2DA51F1348C10E8DDEDE1F
         run: |
           set -euo pipefail
           umask 077
