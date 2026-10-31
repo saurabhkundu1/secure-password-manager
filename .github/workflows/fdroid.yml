@@ -71,7 +71,7 @@ jobs:
             --key-pass env:KEY_PASSWORD \
             --out app-release-signed.apk app-release-aligned.apk
 
-          SIGNER_SHA256=$("$BUILD_TOOLS_DIR/apksigner" verify --print-certs app-release-signed.apk | awk -F': ' '/certificate SHA-256 digest:/ {print $2; exit}' | tr -d ':' | tr '[:lower:]' '[:upper:]')
+          SIGNER_SHA256=$("$BUILD_TOOLS_DIR/apksigner" verify --print-certs app-release-signed.apk | awk -F': ' '/certificate SHA-256 digest:/ {print $NF; exit}' | tr -d ':' | tr '[:lower:]' '[:upper:]')
           echo "Signed APK certificate: ${SIGNER_SHA256:-unavailable}"
           test -n "$SIGNER_SHA256"
           [[ "$SIGNER_SHA256" == "$EXPECTED_SHA256" ]] || { echo "Signed APK certificate does not match the pinned replacement signing certificate" >&2; exit 1; }
