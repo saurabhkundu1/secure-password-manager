@@ -6,4 +6,8 @@
         android:title="Settings"
         android:icon="@android:drawable/ic_menu_preferences"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/action_password_reuse_check"
+        android:title="Check password reuse"
+        app:showAsAction="never" />
 </menu>

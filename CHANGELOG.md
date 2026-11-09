@@ -2,6 +2,36 @@
 
 All notable changes to the **Secure Pass** project will be documented in this file.
 
+## [1.5.0] - Unreleased (versionCode 6 candidate)
+
+### Added
+
+- Optional offline passphrase generation with six words by default, selected independently from a bundled 7,776-word list and joined with double hyphens; users can choose 6–12 words.
+
+## [1.4.0] - Unreleased
+
+### Improved
+
+- Optionally omit visually similar characters when generating passwords for easier manual entry.
+
+## [1.3.0] - Unreleased
+
+### Improved
+
+- Mark copied vault text as sensitive so Android 13+ hides it from clipboard previews.
+
+## [1.2.0] - Unreleased
+
+### Added
+
+- Search account notes locally without including password values in search.
+
+## [1.1.0] - Unreleased
+
+### Added
+
+- Add an on-device password reuse review that lists affected account names without displaying the reused passwords.
+
 ## [1.0.1] - 2026-09-30
 
 ### Added ✨

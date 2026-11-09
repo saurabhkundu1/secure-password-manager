@@ -154,10 +154,10 @@ class VaultActivity : BaseLockActivity() {
         if (query.isEmpty()) {
             entries.addAll(allEntries)
         } else {
-            val lowerQuery = query.lowercase()
             for (item in allEntries) {
-                if (item.website.lowercase().contains(lowerQuery) ||
-                    item.username.lowercase().contains(lowerQuery)
+                if (item.website.orEmpty().contains(query, ignoreCase = true) ||
+                    item.username.orEmpty().contains(query, ignoreCase = true) ||
+                    item.notes.orEmpty().contains(query, ignoreCase = true)
                 ) {
                     entries.add(item)
                 }
@@ -218,6 +218,27 @@ class VaultActivity : BaseLockActivity() {
             btnAddFirst.visibility = View.GONE
             findViewById<View>(R.id.tilSearch).visibility = View.VISIBLE
         }
+    }
+
+    private fun showPasswordReuseCheck() {
+        val reusedGroups = allEntries
+            .filter { it.password.isNotBlank() }
+            .groupBy { it.password }
+            .values
+            .filter { it.size > 1 }
+        val message = if (reusedGroups.isEmpty()) {
+            getString(R.string.password_reuse_none)
+        } else {
+            reusedGroups.joinToString("\n\n") { group ->
+                val sites = group.joinToString("\n") { "• ${it.website}" }
+                resources.getQuantityString(R.plurals.password_reuse_group, group.size, group.size, sites)
+            }
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.password_reuse_title)
+            .setMessage(message)
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
     }
 
     // ---------- Swipe actions ----------
@@ -355,6 +376,10 @@ class VaultActivity : BaseLockActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.action_settings) {
             startActivity(Intent(this, SettingsActivity::class.java))
+            return true
+        }
+        if (item.itemId == R.id.action_password_reuse_check) {
+            showPasswordReuseCheck()
             return true
         }
         return super.onOptionsItemSelected(item)

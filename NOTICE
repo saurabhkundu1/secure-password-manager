@@ -1,0 +1,10 @@
+Third-party content
+
+Passphrase word list
+The bundled app/src/main/res/raw/passphrase_words.txt is based on the Electronic Frontier Foundation (EFF) Long Wordlist (copyright © Electronic Frontier Foundation; created by Joseph Bonneau):
+https://www.eff.org/dice
+
+The list is licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0):
+https://creativecommons.org/licenses/by/4.0/
+
+Changes: the five-digit dice indexes were removed, and the list was deduplicated while preserving source order; the source contained 7,776 unique words, so no entries were removed. Words are stored one per line. The attribution and change notice are also bundled in app/src/main/res/raw/passphrase_wordlist_notice.txt. The full CC BY 4.0 legal text is included in LICENSES/CC-BY-4.0.txt.

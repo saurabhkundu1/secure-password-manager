@@ -1,11 +1,15 @@
 package com.applify.securepass
 
 import android.content.ClipData
+import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.PersistableBundle
 import android.widget.Toast
+import java.util.concurrent.atomic.AtomicBoolean
 
 object ClipboardUtil {
 
@@ -17,18 +21,35 @@ object ClipboardUtil {
     fun copyAndClear(context: Context, label: String?, text: String, seconds: Int) {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
             ?: return
-        val clip = ClipData.newPlainText(label, text)
+        val sensitiveFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ClipDescription.EXTRA_IS_SENSITIVE
+        } else {
+            "android.content.extra.IS_SENSITIVE"
+        }
+        val clip = ClipData.newPlainText(label, text).apply {
+            description.extras = PersistableBundle().apply { putBoolean(sensitiveFlag, true) }
+        }
+        val firstChange = AtomicBoolean(true)
+        val replaced = AtomicBoolean(false)
+        val listener = ClipboardManager.OnPrimaryClipChangedListener {
+            if (!firstChange.getAndSet(false)) replaced.set(true)
+        }
+        clipboard.addPrimaryClipChangedListener(listener)
         clipboard.setPrimaryClip(clip)
 
-        Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+        }
 
+        // shortcut: process death cancels this timer; persistent expiry needs a safe replacement-clip check.
         Handler(Looper.getMainLooper()).postDelayed({
-            // Only clear if the content is still what we copied
-            val currentClip = clipboard.primaryClip
-            if (currentClip != null && currentClip.itemCount > 0) {
-                val currentText = currentClip.getItemAt(0).text.toString()
-                if (text == currentText) {
-                    clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
+            clipboard.removePrimaryClipChangedListener(listener)
+            if (!replaced.get()) {
+                runCatching {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) clipboard.clearPrimaryClip()
+                    else clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
+                }
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                     Toast.makeText(context, "Clipboard cleared", Toast.LENGTH_SHORT).show()
                 }
             }

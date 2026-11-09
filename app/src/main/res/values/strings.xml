@@ -1,3 +1,22 @@
 <resources>
     <string name="app_name">Secure Pass</string>
+    <string name="password_reuse_title">Password reuse check</string>
+    <string name="password_reuse_none">No exact password reuse found in your saved entries.</string>
+    <plurals name="password_reuse_group">
+        <item quantity="one">%1$d saved entry uses the same password:\n%2$s</item>
+        <item quantity="other">%1$d saved entries use the same password:\n%2$s</item>
+    </plurals>
+    <string name="password_generator_avoid_confusable">Avoid similar characters (I, l, 1, O, o, 0, |)</string>
+    <string name="password_generator_title">Generate Password or Passphrase</string>
+    <string name="password_generator_mode_characters">Character password (letters, numbers, symbols)</string>
+    <string name="password_generator_mode_passphrase">Memorable passphrase (random words separated by double hyphens)</string>
+    <string name="password_generator_word_count">Word count (6–12)</string>
+    <string name="password_generator_passphrase_help">Six words are selected by default from the offline word list. More words add more possible combinations.</string>
+    <string name="password_generator_word_list_attribution">Word list: EFF’s Long Wordlist (eff.org/dice), CC BY 4.0. Attribution and license notice included.</string>
+    <string name="password_generator_preset_rules">Apply Preset Site Rules:</string>
+    <string name="password_generator_length">Length</string>
+    <string name="password_generator_upper">A-Z</string>
+    <string name="password_generator_lower">a-z</string>
+    <string name="password_generator_digits">0-9</string>
+    <string name="password_generator_symbols">!@#$%</string>
 </resources>

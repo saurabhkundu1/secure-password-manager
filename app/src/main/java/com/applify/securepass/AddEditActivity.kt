@@ -12,6 +12,8 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.ProgressBar
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -177,16 +179,26 @@ class AddEditActivity : BaseLockActivity() {
 
     private fun showPasswordGeneratorDialog() {
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Generate Password")
+        builder.setTitle(R.string.password_generator_title)
         val dialogView = layoutInflater.inflate(R.layout.dialog_password_generator, null)
         builder.setView(dialogView)
 
+        val radioPassphrase: RadioButton = dialogView.findViewById(R.id.radioPassphrase)
+        val characterOptions: View = dialogView.findViewById(R.id.characterOptions)
+        val passphraseOptions: View = dialogView.findViewById(R.id.passphraseOptions)
         val spinnerPresets: Spinner = dialogView.findViewById(R.id.spinnerPresets)
         val etLength: TextInputEditText = dialogView.findViewById(R.id.etLength)
+        val etWordCount: TextInputEditText = dialogView.findViewById(R.id.etWordCount)
         val cbUpper: CheckBox = dialogView.findViewById(R.id.cbUpper)
         val cbLower: CheckBox = dialogView.findViewById(R.id.cbLower)
         val cbDigits: CheckBox = dialogView.findViewById(R.id.cbDigits)
         val cbSymbols: CheckBox = dialogView.findViewById(R.id.cbSymbols)
+        val cbAvoidConfusable: CheckBox = dialogView.findViewById(R.id.cbAvoidConfusable)
+
+        dialogView.findViewById<RadioGroup>(R.id.generatorMode).setOnCheckedChangeListener { _, checkedId ->
+            characterOptions.visibility = if (checkedId == R.id.radioCharacterPassword) View.VISIBLE else View.GONE
+            passphraseOptions.visibility = if (checkedId == R.id.radioPassphrase) View.VISIBLE else View.GONE
+        }
 
         val presetNames = mutableListOf("Custom Rules")
         presetNames.addAll(SitePreset.PRESETS.map { "${it.name} (${it.length}-char)" })
@@ -211,18 +223,27 @@ class AddEditActivity : BaseLockActivity() {
         }
 
         builder.setPositiveButton("Generate") { _, _ ->
-            val length = try {
-                val lengthStr = etLength.text?.toString() ?: "16"
-                lengthStr.toInt()
-            } catch (e: NumberFormatException) {
-                16
+            val generated = if (radioPassphrase.isChecked) {
+                val wordCount = (etWordCount.text?.toString()?.toIntOrNull()
+                    ?: PasswordGenerator.DEFAULT_PASSPHRASE_WORD_COUNT)
+                    .coerceIn(PasswordGenerator.MIN_PASSPHRASE_WORD_COUNT, PasswordGenerator.MAX_PASSPHRASE_WORD_COUNT)
+                val words = resources.openRawResource(R.raw.passphrase_words).bufferedReader().use { it.readLines() }
+                PasswordGenerator.generatePassphrase(words, wordCount)
+            } else {
+                val length = try {
+                    val lengthStr = etLength.text?.toString() ?: "16"
+                    lengthStr.toInt()
+                } catch (e: NumberFormatException) {
+                    16
+                }
+                PasswordGenerator.generate(
+                    length,
+                    cbUpper.isChecked, cbLower.isChecked,
+                    cbDigits.isChecked, cbSymbols.isChecked,
+                    cbAvoidConfusable.isChecked
+                )
             }
-            val pwd = PasswordGenerator.generate(
-                length,
-                cbUpper.isChecked, cbLower.isChecked,
-                cbDigits.isChecked, cbSymbols.isChecked
-            )
-            etPassword.setText(pwd)
+            etPassword.setText(generated)
         }
         builder.setNegativeButton("Cancel", null)
         builder.show()

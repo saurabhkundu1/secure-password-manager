@@ -18,10 +18,14 @@ Store your credentials safely in a local, encrypted vault using **AES-256-GCM**,
 - 🎨 **Personalized UI** – Clean, minimalist design with extensive theme support:
   - **13 Color Palettes**: Teal, Blue, Green, Purple, Red, Orange, Indigo, Pink, Onyx, Yellow, Cyan, Brown, and Grey.
   - **Display Modes**: Full support for Light, Dark, and System default modes.
-- 🔍 **Search & Favorites** – Instantly filter your entries or pin your most important accounts to the top of the list for quick access.
+- 🔍 **Search & Favorites** – Filter entries by website, username, or notes; password values stay out of search. Pin important accounts for quick access.
+- 🧹 **Password Reuse Check** – Find saved accounts using the same exact password with an on-device review; the dialog shows account names, never the password.
+- 🕶️ **Private Clipboard** – Mark copied vault text as sensitive so Android 13+ hides its preview in the system clipboard UI.
 - 🎲 **Password Utilities** – 
-  - **Generator**: Create cryptographically strong passwords with customizable length and character sets.
+  - **Generator**: Create character passwords with customizable length and character sets, or choose a memorable passphrase of 6–12 random words separated by double hyphens. The 1.5.0 candidate (versionCode 6) defaults to six words from a bundled, deduplicated 7,776-word list, giving about 77.5 bits of word-choice entropy at the default. Selection uses `SecureRandom` on-device; the word list is included in the app. See [NOTICE](NOTICE) for source, attribution, and license details.
   - **Strength Indicator**: Real-time visual feedback on your password's complexity.
+
+Passphrases support occasional account setup or password changes when a credential needs to be typed manually; character generation and autofill remain available for other login workflows. SecurePass stays ad-free, with optional one-time support for maintenance, and vault data is never sold.
 - 🔑 **Autofill** – Enable SecurePass from Android's Autofill settings; matching saved logins are offered after PIN unlock.
 - ⏱️ **Authenticator Codes** – Store a Base32 secret or paste an `otpauth://` URI in the encrypted vault, then copy its current six-digit code from the entry menu.
 - 📁 **Encrypted Backups** – Export and import your vault as an encrypted Base64 text file (`vault.txt`). Android cloud/device backup is disabled; use the app's encrypted export when migrating devices.

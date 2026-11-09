@@ -1,0 +1,7 @@
+Word list attribution and change notice
+
+Electronic Frontier Foundation (EFF), EFF's Long Wordlist (copyright © EFF; created by Joseph Bonneau).
+Source: https://www.eff.org/dice
+License: Creative Commons Attribution 4.0 International (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/
+
+Changes: the source five-digit dice indexes were removed. The list was deduplicated while preserving its original order; the EFF source contained 7,776 unique words, so no entries were removed. Words are stored one per line. The full license text is in the repository at LICENSES/CC-BY-4.0.txt.
