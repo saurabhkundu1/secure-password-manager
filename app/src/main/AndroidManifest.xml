@@ -17,13 +17,13 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity-alias
             android:name=".MainActivityTeal"
             android:targetActivity=".MainActivity"
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_teal"
             android:roundIcon="@mipmap/ic_launcher_teal"
             android:exported="true"
@@ -36,6 +36,7 @@
         <activity-alias
             android:name=".MainActivityBlue"
             android:targetActivity=".MainActivity"
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_blue"
             android:roundIcon="@mipmap/ic_launcher_blue"
             android:exported="true"
@@ -48,6 +49,7 @@
         <activity-alias
             android:name=".MainActivityGreen"
             android:targetActivity=".MainActivity"
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_green"
             android:roundIcon="@mipmap/ic_launcher_green"
             android:exported="true"
@@ -60,6 +62,7 @@
         <activity-alias
             android:name=".MainActivityPurple"
             android:targetActivity=".MainActivity"
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_purple"
             android:roundIcon="@mipmap/ic_launcher_purple"
             android:exported="true"
@@ -72,6 +75,7 @@
         <activity-alias
             android:name=".MainActivityRed"
             android:targetActivity=".MainActivity"
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_red"
             android:roundIcon="@mipmap/ic_launcher_red"
             android:exported="true"
@@ -84,6 +88,7 @@
         <activity-alias
             android:name=".MainActivityAmber"
             android:targetActivity=".MainActivity"
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_amber"
             android:roundIcon="@mipmap/ic_launcher_amber"
             android:exported="true"
@@ -96,6 +101,7 @@
         <activity-alias
             android:name=".MainActivityIndigo"
             android:targetActivity=".MainActivity"
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_indigo"
             android:roundIcon="@mipmap/ic_launcher_indigo"
             android:exported="true"
@@ -108,6 +114,7 @@
         <activity-alias
             android:name=".MainActivityPink"
             android:targetActivity=".MainActivity"
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_pink"
             android:roundIcon="@mipmap/ic_launcher_pink"
             android:exported="true"
@@ -120,6 +127,7 @@
         <activity-alias
             android:name=".MainActivityOnyx"
             android:targetActivity=".MainActivity"
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_onyx"
             android:roundIcon="@mipmap/ic_launcher_onyx"
             android:exported="true"
@@ -132,6 +140,7 @@
         <activity-alias
             android:name=".MainActivityYellow"
             android:targetActivity=".MainActivity"
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_yellow"
             android:roundIcon="@mipmap/ic_launcher_yellow"
             android:exported="true"
@@ -144,6 +153,7 @@
         <activity-alias
             android:name=".MainActivityCyan"
             android:targetActivity=".MainActivity"
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_cyan"
             android:roundIcon="@mipmap/ic_launcher_cyan"
             android:exported="true"
@@ -156,6 +166,7 @@
         <activity-alias
             android:name=".MainActivityBrown"
             android:targetActivity=".MainActivity"
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_brown"
             android:roundIcon="@mipmap/ic_launcher_brown"
             android:exported="true"
@@ -168,6 +179,7 @@
         <activity-alias
             android:name=".MainActivityGrey"
             android:targetActivity=".MainActivity"
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher_grey"
             android:roundIcon="@mipmap/ic_launcher_grey"
             android:exported="true"

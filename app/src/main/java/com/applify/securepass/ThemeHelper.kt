@@ -20,12 +20,12 @@ object ThemeHelper {
         "Teal", "Blue", "Green", "Purple", "Red", "Amber", "Indigo",
         "Pink", "Onyx", "Yellow", "Cyan", "Brown", "Grey"
     )
-    private val themeIcons = intArrayOf(
-        R.mipmap.ic_launcher_teal, R.mipmap.ic_launcher_blue, R.mipmap.ic_launcher_green,
-        R.mipmap.ic_launcher_purple, R.mipmap.ic_launcher_red, R.mipmap.ic_launcher_amber,
-        R.mipmap.ic_launcher_indigo, R.mipmap.ic_launcher_pink, R.mipmap.ic_launcher_onyx,
-        R.mipmap.ic_launcher_yellow, R.mipmap.ic_launcher_cyan, R.mipmap.ic_launcher_brown,
-        R.mipmap.ic_launcher_grey
+    private val themeDrawables = intArrayOf(
+        R.drawable.securepass_foreground_teal, R.drawable.securepass_foreground_blue, R.drawable.securepass_foreground_green,
+        R.drawable.securepass_foreground_purple, R.drawable.securepass_foreground_red, R.drawable.securepass_foreground_amber,
+        R.drawable.securepass_foreground_indigo, R.drawable.securepass_foreground_pink, R.drawable.securepass_foreground_onyx,
+        R.drawable.securepass_foreground_yellow, R.drawable.securepass_foreground_cyan, R.drawable.securepass_foreground_brown,
+        R.drawable.securepass_foreground_grey
     )
 
     /**
@@ -80,7 +80,7 @@ object ThemeHelper {
      */
     @JvmStatic
     fun getThemeIconResId(palette: Int): Int {
-        return themeIcons.getOrElse(palette) { themeIcons[0] }
+        return themeDrawables.getOrElse(palette) { themeDrawables[0] }
     }
 
     /**
@@ -101,21 +101,36 @@ object ThemeHelper {
         val pm = context.packageManager
         val pkg = context.packageName
 
-        val activeAlias = "$pkg.MainActivity${iconAliases.getOrElse(iconIndex) { iconAliases[0] }}"
+        val targetSuffix = iconAliases.getOrElse(iconIndex) { iconAliases[0] }
+        val targetAlias = "$pkg.MainActivity$targetSuffix"
+
+        val targetComponent = ComponentName(pkg, targetAlias)
+        val currentSetting = pm.getComponentEnabledSetting(targetComponent)
+
+        // If the target alias is already the enabled component, do nothing.
+        // This avoids unnecessary launcher broadcasts that can drop home-screen shortcuts.
+        if (currentSetting == PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+            return
+        }
+
+        // Enable the new target alias first so there is always a valid launcher activity
         pm.setComponentEnabledSetting(
-            ComponentName(pkg, activeAlias),
+            targetComponent,
             PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
             PackageManager.DONT_KILL_APP
         )
 
+        // Disable all other aliases only if they are not already disabled
         for (suffix in iconAliases) {
-            val alias = "$pkg.MainActivity$suffix"
-            if (alias != activeAlias) {
-                pm.setComponentEnabledSetting(
-                    ComponentName(pkg, alias),
-                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    PackageManager.DONT_KILL_APP
-                )
+            if (suffix != targetSuffix) {
+                val aliasComponent = ComponentName(pkg, "$pkg.MainActivity$suffix")
+                if (pm.getComponentEnabledSetting(aliasComponent) != PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
+                    pm.setComponentEnabledSetting(
+                        aliasComponent,
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        PackageManager.DONT_KILL_APP
+                    )
+                }
             }
         }
     }
