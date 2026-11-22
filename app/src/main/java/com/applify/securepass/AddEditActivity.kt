@@ -250,39 +250,12 @@ class AddEditActivity : BaseLockActivity() {
     }
 
     private fun updatePasswordStrength(password: String?) {
-        if (password.isNullOrEmpty()) {
-            progressStrength.progress = 0
-            tvStrengthText.text = "Weak"
-            tvStrengthText.setTextColor(-0x2ce0d1)
-            progressStrength.progressTintList = ColorStateList.valueOf(-0x2ce0d1)
-            return
-        }
-
-        var score = 0
-        // Length (max 40 pts)
-        score += Math.min(password.length * 5, 40)
-
-        // Varieties (15 pts each)
-        if (password.contains(Regex(".*[A-Z].*"))) score += 15
-        if (password.contains(Regex(".*[a-z].*"))) score += 15
-        if (password.contains(Regex(".*[0-9].*"))) score += 15
-        if (password.contains(Regex(".*[^A-Za-z0-9].*"))) score += 15
-
-        progressStrength.progress = score
-
-        if (score <= 40) {
-            tvStrengthText.text = "Weak"
-            tvStrengthText.setTextColor(-0x2ce0d1)
-            progressStrength.progressTintList = ColorStateList.valueOf(-0x2ce0d1)
-        } else if (score <= 70) {
-            tvStrengthText.text = "Fair"
-            tvStrengthText.setTextColor(-0xa8400)
-            progressStrength.progressTintList = ColorStateList.valueOf(-0xa8400)
-        } else {
-            tvStrengthText.text = "Strong"
-            tvStrengthText.setTextColor(-0xc771c4)
-            progressStrength.progressTintList = ColorStateList.valueOf(-0xc771c4)
-        }
+        val result = PasswordStrengthEstimator.estimate(password)
+        progressStrength.progress = result.score
+        tvStrengthText.text = "${result.level.label} · ${result.feedback}"
+        val color = result.level.colorHex
+        tvStrengthText.setTextColor(color)
+        progressStrength.progressTintList = ColorStateList.valueOf(color)
     }
 
     companion object {
