@@ -64,16 +64,22 @@ object PasswordStrengthEstimator {
 
         // 2. Sequential patterns
         val lower = password.lowercase()
+        var seqPenalty = 0.0
         for (seq in SEQUENCES) {
-            for (len in 3..seq.length) {
+            for (len in seq.length downTo 3) {
+                var found = false
                 for (start in 0..seq.length - len) {
                     val sub = seq.substring(start, start + len)
                     if (lower.contains(sub) || lower.contains(sub.reversed())) {
-                        penalty += len * 4.0
+                        seqPenalty += len * 3.0
+                        found = true
+                        break
                     }
                 }
+                if (found) break
             }
         }
+        penalty += seqPenalty.coerceAtMost(45.0)
 
         // 3. Length penalty for short passwords
         if (password.length < 8) {
