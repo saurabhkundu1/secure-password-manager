@@ -1,5 +1,7 @@
 package com.applify.securepass
 
+import android.annotation.SuppressLint
+
 import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
@@ -149,6 +151,7 @@ class VaultActivity : BaseLockActivity() {
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun filterEntries(query: String) {
         entries.clear()
         if (query.isEmpty()) {

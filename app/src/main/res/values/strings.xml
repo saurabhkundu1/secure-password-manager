@@ -15,8 +15,8 @@
     <string name="password_generator_word_list_attribution">Word list: EFF’s Long Wordlist (eff.org/dice), CC BY 4.0. Attribution and license notice included.</string>
     <string name="password_generator_preset_rules">Apply Preset Site Rules:</string>
     <string name="password_generator_length">Length</string>
-    <string name="password_generator_upper">A-Z</string>
-    <string name="password_generator_lower">a-z</string>
-    <string name="password_generator_digits">0-9</string>
+    <string name="password_generator_upper">A&#8211;Z</string>
+    <string name="password_generator_lower">a&#8211;z</string>
+    <string name="password_generator_digits">0&#8211;9</string>
     <string name="password_generator_symbols">!@#$%</string>
 </resources>
