@@ -19,4 +19,15 @@
     <string name="password_generator_lower">a&#8211;z</string>
     <string name="password_generator_digits">0&#8211;9</string>
     <string name="password_generator_symbols">!@#$%</string>
+    <string name="copy_password">Copy password</string>
+    <string name="copy_username">Copy username</string>
+    <string name="filter_all">All</string>
+    <string name="filter_favorites">★ Favorites</string>
+    <string name="filter_weak">⚠️ Weak</string>
+    <string name="filter_reused">🔁 Reused</string>
+    <string name="filter_totp">🔑 2FA</string>
+    <string name="security_audit_title">Vault Security Audit</string>
+    <string name="toast_copied_password">Password copied (auto-clears in 30s)</string>
+    <string name="toast_copied_username">Username copied</string>
+    <string name="toast_copied_totp">2FA Code copied (auto-clears)</string>
 </resources>

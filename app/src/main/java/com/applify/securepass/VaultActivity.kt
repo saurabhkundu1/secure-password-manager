@@ -1,7 +1,6 @@
 package com.applify.securepass
 
 import android.annotation.SuppressLint
-
 import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
@@ -24,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.applify.securepass.data.VaultItem
 import com.applify.securepass.data.VaultManager
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.chip.ChipGroup
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 import java.util.ArrayList
@@ -42,6 +42,8 @@ class VaultActivity : BaseLockActivity() {
     private var userCode: String? = null // may be null if unlocked via biometric
     private lateinit var btnAddFirst: Button
     private lateinit var tvVaultCount: TextView
+    private lateinit var chipGroupFilter: ChipGroup
+    private var currentFilter: String = "ALL"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeHelper.applyTheme(this)
@@ -60,6 +62,7 @@ class VaultActivity : BaseLockActivity() {
         val fabAdd: FloatingActionButton = findViewById(R.id.fabAdd)
         btnAddFirst = findViewById(R.id.btnAddFirst)
         tvVaultCount = findViewById(R.id.tvVaultCount)
+        chipGroupFilter = findViewById(R.id.chipGroupFilter)
 
         // Empty-state button click -> open AddEditActivity
         btnAddFirst.setOnClickListener {
@@ -96,6 +99,18 @@ class VaultActivity : BaseLockActivity() {
             }
             override fun afterTextChanged(s: Editable?) {}
         })
+
+        // Filter chips listener
+        chipGroupFilter.setOnCheckedStateChangeListener { _, checkedIds ->
+            currentFilter = when {
+                checkedIds.contains(R.id.chipFavorites) -> "FAVORITES"
+                checkedIds.contains(R.id.chipWeak) -> "WEAK"
+                checkedIds.contains(R.id.chipReused) -> "REUSED"
+                checkedIds.contains(R.id.chipTotp) -> "TOTP"
+                else -> "ALL"
+            }
+            filterEntries(etSearch.text?.toString() ?: "")
+        }
 
         // Swipe to delete / actions
         setupSwipeToDelete()
@@ -143,7 +158,20 @@ class VaultActivity : BaseLockActivity() {
         try {
             allEntries.clear()
             allEntries.addAll(vaultManager.loadEntries())
-            tvVaultCount.text = "${allEntries.size}\n${if (allEntries.size == 1) "item" else "items"}"
+
+            val reused = allEntries
+                .filter { it.password.isNotBlank() }
+                .groupBy { it.password }
+                .filter { it.value.size > 1 }
+                .keys
+            adapter.reusedPasswords = reused
+
+            val weakCount = allEntries.count {
+                it.password.isNotBlank() && PasswordStrengthEstimator.estimate(it.password).score <= 1
+            }
+            val baseText = "${allEntries.size}\n${if (allEntries.size == 1) "item" else "items"}"
+            tvVaultCount.text = if (weakCount > 0) "$baseText (⚠️$weakCount)" else "$baseText (✓)"
+
             filterEntries(etSearch.text?.toString() ?: "")
             toggleEmptyState()
         } catch (e: Exception) {
@@ -153,19 +181,30 @@ class VaultActivity : BaseLockActivity() {
 
     @SuppressLint("NotifyDataSetChanged")
     private fun filterEntries(query: String) {
-        entries.clear()
-        if (query.isEmpty()) {
-            entries.addAll(allEntries)
+        val matchingQuery = if (query.isEmpty()) {
+            allEntries
         } else {
-            for (item in allEntries) {
-                if (item.website.orEmpty().contains(query, ignoreCase = true) ||
-                    item.username.orEmpty().contains(query, ignoreCase = true) ||
-                    item.notes.orEmpty().contains(query, ignoreCase = true)
-                ) {
-                    entries.add(item)
-                }
+            allEntries.filter {
+                it.website.orEmpty().contains(query, ignoreCase = true) ||
+                it.username.orEmpty().contains(query, ignoreCase = true) ||
+                it.notes.orEmpty().contains(query, ignoreCase = true)
             }
         }
+
+        val filtered = when (currentFilter) {
+            "FAVORITES" -> matchingQuery.filter { it.isFavorite }
+            "WEAK" -> matchingQuery.filter {
+                it.password.isNotBlank() && PasswordStrengthEstimator.estimate(it.password).score <= 1
+            }
+            "REUSED" -> matchingQuery.filter {
+                it.password.isNotBlank() && adapter.reusedPasswords.contains(it.password)
+            }
+            "TOTP" -> matchingQuery.filter { it.totpSecret.isNotBlank() }
+            else -> matchingQuery
+        }
+
+        entries.clear()
+        entries.addAll(filtered)
         sortEntries()
         adapter.notifyDataSetChanged()
     }
@@ -215,12 +254,67 @@ class VaultActivity : BaseLockActivity() {
             recyclerView.visibility = View.GONE
             btnAddFirst.visibility = View.VISIBLE
             findViewById<View>(R.id.tilSearch).visibility = View.GONE
+            findViewById<View>(R.id.scrollFilters).visibility = View.GONE
         } else {
             layoutEmpty.visibility = View.GONE
             recyclerView.visibility = View.VISIBLE
             btnAddFirst.visibility = View.GONE
             findViewById<View>(R.id.tilSearch).visibility = View.VISIBLE
+            findViewById<View>(R.id.scrollFilters).visibility = View.VISIBLE
         }
+    }
+
+    private fun showSecurityAudit() {
+        val total = allEntries.size
+        if (total == 0) {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.security_audit_title)
+                .setMessage("Your vault is empty. Add entries to see security analytics.")
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+            return
+        }
+
+        var strongCount = 0
+        var fairCount = 0
+        var weakCount = 0
+        var totpCount = 0
+
+        for (item in allEntries) {
+            if (item.totpSecret.isNotBlank()) totpCount++
+            if (item.password.isNotBlank()) {
+                val score = PasswordStrengthEstimator.estimate(item.password).score
+                when {
+                    score >= 3 -> strongCount++
+                    score == 2 -> fairCount++
+                    else -> weakCount++
+                }
+            }
+        }
+
+        val reusedGroupCount = adapter.reusedPasswords.size
+        val scorePercent = ((strongCount.toDouble() / total) * 100).toInt()
+
+        val report = StringBuilder()
+        report.append("Vault Health Score: $scorePercent%\n\n")
+        report.append("• Total Credentials: $total\n")
+        report.append("• Strong Passwords: $strongCount\n")
+        report.append("• Fair Passwords: $fairCount\n")
+        report.append("• ⚠️ Weak Passwords: $weakCount\n")
+        report.append("• 🔁 Reused Passwords: $reusedGroupCount\n")
+        report.append("• 🔑 2FA Authenticator Protected: $totpCount\n\n")
+
+        if (weakCount > 0 || reusedGroupCount > 0) {
+            report.append("Recommendation: Use the Weak / Reused filter chips to update vulnerable accounts with generated passphrases.")
+        } else {
+            report.append("Excellent! All passwords meet high security standards.")
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.security_audit_title)
+            .setMessage(report.toString())
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
     }
 
     private fun showPasswordReuseCheck() {
@@ -284,7 +378,7 @@ class VaultActivity : BaseLockActivity() {
                         5 -> paint.color = Color.argb(alpha, 142, 36, 170) // Purple for Edit
                         6 -> paint.color = Color.argb(alpha, 0, 172, 193) // Cyan for Copy Notes
                         7 -> paint.color = Color.argb(alpha, 63, 81, 181) // Indigo for Share Credential
-                        8 -> paint.color = Color.argb(alpha, 0, 137, 123) // Teal for View Details
+                        8 -> paint.color = Color.argb(alpha, 0, 172, 193) // Teal for View Details
                         else -> paint.color = Color.TRANSPARENT
                     }
 
@@ -370,7 +464,7 @@ class VaultActivity : BaseLockActivity() {
         itemTouchHelper.attachToRecyclerView(recyclerView)
     }
 
-    // ---------- Toolbar menu (Settings) ----------
+    // ---------- Toolbar menu ----------
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.vault_menu, menu)
         return true
@@ -379,6 +473,10 @@ class VaultActivity : BaseLockActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.action_settings) {
             startActivity(Intent(this, SettingsActivity::class.java))
+            return true
+        }
+        if (item.itemId == R.id.action_security_audit) {
+            showSecurityAudit()
             return true
         }
         if (item.itemId == R.id.action_password_reuse_check) {

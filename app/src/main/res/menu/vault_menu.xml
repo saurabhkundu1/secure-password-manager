@@ -7,6 +7,10 @@
         android:icon="@android:drawable/ic_menu_preferences"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_security_audit"
+        android:title="Vault Security Audit"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_password_reuse_check"
         android:title="Check password reuse"
         app:showAsAction="never" />
