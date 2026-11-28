@@ -1,16 +1,26 @@
 <resources>
     <!-- Base application theme -->
-    <style name="Theme.SecurePass" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.SecurePass" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color (Default Teal) -->
         <item name="colorPrimary">@color/palette_teal_primary</item>
         <item name="colorOnPrimary">@color/white</item>
-        <!-- Secondary brand color -->
-        <item name="colorSecondary">#FFB300</item>
-        <item name="colorOnSecondary">#000000</item>
-        <!-- Status bar color -->
-        <item name="android:statusBarColor">@color/palette_teal_variant</item>
-        <!-- Overall background -->
-        <item name="android:windowBackground">?android:attr/colorBackground</item>
+        <item name="colorPrimaryContainer">@color/m3_surface_container_high</item>
+        <item name="colorOnPrimaryContainer">@color/palette_teal_primary</item>
+        <!-- Secondary & tertiary aligned to user palette (no amber clash) -->
+        <item name="colorSecondary">@color/palette_teal_primary</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/m3_surface_container_high</item>
+        <item name="colorOnSecondaryContainer">@color/m3_on_surface</item>
+        <item name="colorTertiary">@color/palette_teal_variant</item>
+        <item name="colorControlActivated">@color/palette_teal_primary</item>
+        <!-- Material 3 Surface tokens -->
+        <item name="colorSurface">@color/m3_surface</item>
+        <item name="colorSurfaceContainer">@color/m3_surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/m3_surface_container_high</item>
+        <item name="colorOnSurface">@color/m3_on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/m3_on_surface_variant</item>
+        <item name="colorOutlineVariant">@color/m3_outline_variant</item>
+        <item name="android:windowBackground">@color/m3_surface</item>
     </style>
 
     <!-- Palette themes -->
@@ -18,61 +28,99 @@
 
     <style name="Theme.SecurePass.Blue" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_blue_primary</item>
-        <item name="android:statusBarColor">@color/palette_blue_variant</item>
+        <item name="colorSecondary">@color/palette_blue_primary</item>
+        <item name="colorTertiary">@color/palette_blue_variant</item>
+        <item name="colorOnPrimaryContainer">@color/palette_blue_primary</item>
+        <item name="colorControlActivated">@color/palette_blue_primary</item>
     </style>
 
     <style name="Theme.SecurePass.Green" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_green_primary</item>
-        <item name="android:statusBarColor">@color/palette_green_variant</item>
+        <item name="colorSecondary">@color/palette_green_primary</item>
+        <item name="colorTertiary">@color/palette_green_variant</item>
+        <item name="colorOnPrimaryContainer">@color/palette_green_primary</item>
+        <item name="colorControlActivated">@color/palette_green_primary</item>
     </style>
 
     <style name="Theme.SecurePass.Purple" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_purple_primary</item>
-        <item name="android:statusBarColor">@color/palette_purple_variant</item>
+        <item name="colorSecondary">@color/palette_purple_primary</item>
+        <item name="colorTertiary">@color/palette_purple_variant</item>
+        <item name="colorOnPrimaryContainer">@color/palette_purple_primary</item>
+        <item name="colorControlActivated">@color/palette_purple_primary</item>
     </style>
 
     <style name="Theme.SecurePass.Red" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_red_primary</item>
-        <item name="android:statusBarColor">@color/palette_red_variant</item>
+        <item name="colorSecondary">@color/palette_red_primary</item>
+        <item name="colorTertiary">@color/palette_red_variant</item>
+        <item name="colorOnPrimaryContainer">@color/palette_red_primary</item>
+        <item name="colorControlActivated">@color/palette_red_primary</item>
     </style>
 
     <style name="Theme.SecurePass.Amber" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_amber_primary</item>
-        <item name="android:statusBarColor">@color/palette_amber_variant</item>
+        <item name="colorSecondary">@color/palette_amber_primary</item>
+        <item name="colorTertiary">@color/palette_amber_variant</item>
+        <item name="colorOnPrimaryContainer">@color/palette_amber_primary</item>
+        <item name="colorControlActivated">@color/palette_amber_primary</item>
     </style>
 
     <style name="Theme.SecurePass.Indigo" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_indigo_primary</item>
-        <item name="android:statusBarColor">@color/palette_indigo_variant</item>
+        <item name="colorSecondary">@color/palette_indigo_primary</item>
+        <item name="colorTertiary">@color/palette_indigo_variant</item>
+        <item name="colorOnPrimaryContainer">@color/palette_indigo_primary</item>
+        <item name="colorControlActivated">@color/palette_indigo_primary</item>
     </style>
 
     <style name="Theme.SecurePass.Pink" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_pink_primary</item>
-        <item name="android:statusBarColor">@color/palette_pink_variant</item>
+        <item name="colorSecondary">@color/palette_pink_primary</item>
+        <item name="colorTertiary">@color/palette_pink_variant</item>
+        <item name="colorOnPrimaryContainer">@color/palette_pink_primary</item>
+        <item name="colorControlActivated">@color/palette_pink_primary</item>
     </style>
 
     <style name="Theme.SecurePass.Onyx" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_onyx_primary</item>
-        <item name="android:statusBarColor">@color/palette_onyx_variant</item>
+        <item name="colorSecondary">@color/palette_onyx_primary</item>
+        <item name="colorTertiary">@color/palette_onyx_variant</item>
+        <item name="colorOnPrimaryContainer">@color/palette_onyx_primary</item>
+        <item name="colorControlActivated">@color/palette_onyx_primary</item>
     </style>
 
     <style name="Theme.SecurePass.Yellow" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_yellow_primary</item>
-        <item name="android:statusBarColor">@color/palette_yellow_variant</item>
+        <item name="colorOnPrimary">#181C20</item>
+        <item name="colorSecondary">@color/palette_yellow_primary</item>
+        <item name="colorOnSecondary">#181C20</item>
+        <item name="colorTertiary">@color/palette_yellow_variant</item>
+        <item name="colorOnPrimaryContainer">@color/palette_yellow_variant</item>
+        <item name="colorControlActivated">@color/palette_yellow_primary</item>
     </style>
 
     <style name="Theme.SecurePass.Cyan" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_cyan_primary</item>
-        <item name="android:statusBarColor">@color/palette_cyan_variant</item>
+        <item name="colorSecondary">@color/palette_cyan_primary</item>
+        <item name="colorTertiary">@color/palette_cyan_variant</item>
+        <item name="colorOnPrimaryContainer">@color/palette_cyan_primary</item>
+        <item name="colorControlActivated">@color/palette_cyan_primary</item>
     </style>
 
     <style name="Theme.SecurePass.Brown" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_brown_primary</item>
-        <item name="android:statusBarColor">@color/palette_brown_variant</item>
+        <item name="colorSecondary">@color/palette_brown_primary</item>
+        <item name="colorTertiary">@color/palette_brown_variant</item>
+        <item name="colorOnPrimaryContainer">@color/palette_brown_primary</item>
+        <item name="colorControlActivated">@color/palette_brown_primary</item>
     </style>
 
     <style name="Theme.SecurePass.Grey" parent="Theme.SecurePass">
         <item name="colorPrimary">@color/palette_grey_primary</item>
-        <item name="android:statusBarColor">@color/palette_grey_variant</item>
+        <item name="colorSecondary">@color/palette_grey_primary</item>
+        <item name="colorTertiary">@color/palette_grey_variant</item>
+        <item name="colorOnPrimaryContainer">@color/palette_grey_primary</item>
+        <item name="colorControlActivated">@color/palette_grey_primary</item>
     </style>
 </resources>

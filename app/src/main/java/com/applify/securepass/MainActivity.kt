@@ -11,8 +11,11 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.applify.securepass.data.VaultManager
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
@@ -38,7 +41,26 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeHelper.applyTheme(this)
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+
+        val mainRoot: View = findViewById(R.id.mainRoot)
+        val baseLeft = mainRoot.paddingLeft
+        val baseTop = mainRoot.paddingTop
+        val baseRight = mainRoot.paddingRight
+        val baseBottom = mainRoot.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(mainRoot) { v, windowInsets ->
+            val insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            v.setPadding(
+                baseLeft + insets.left,
+                baseTop + insets.top,
+                baseRight + insets.right,
+                baseBottom + insets.bottom
+            )
+            windowInsets
+        }
 
         prefs = getSharedPreferences("secure_pass_prefs", MODE_PRIVATE)
         vaultManager = VaultManager(this)

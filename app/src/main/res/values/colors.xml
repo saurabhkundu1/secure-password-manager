@@ -4,6 +4,16 @@
     <color name="launcher_background">#101827</color>
     <color name="launcher_background_onyx">#DCE0E5</color>
 
+    <!-- Material 3 Neutral Surface Tokens -->
+    <color name="m3_surface">#F7F9FB</color>
+    <color name="m3_surface_container">#FFFFFF</color>
+    <color name="m3_surface_container_high">#EEF2F6</color>
+    <color name="m3_outline_variant">#DDE3EA</color>
+    <color name="m3_on_surface">#181C20</color>
+    <color name="m3_on_surface_variant">#5C6570</color>
+    <color name="m3_error_container">#FDECEC</color>
+    <color name="m3_on_error_container">#B3261E</color>
+
     <!-- Palette Colors -->
     <color name="palette_teal_primary">#00897B</color>
     <color name="palette_teal_variant">#00695C</color>

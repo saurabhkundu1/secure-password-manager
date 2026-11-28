@@ -4,7 +4,8 @@
     <item
         android:id="@+id/action_settings"
         android:title="Settings"
-        android:icon="@android:drawable/ic_menu_preferences"
+        android:icon="@drawable/ic_settings_rounded"
+        app:iconTint="@color/m3_on_surface"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_security_audit"

@@ -4,32 +4,38 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
 import android.text.format.DateUtils
 import android.util.Log
+import android.view.Gravity
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.GridLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.RadioButton
-import android.widget.RadioGroup
-import android.widget.Spinner
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.applify.securepass.crypto.CryptoManager
 import com.applify.securepass.data.VaultItem
 import com.applify.securepass.data.VaultManager
 import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.switchmaterial.SwitchMaterial
+import com.google.android.material.button.MaterialButtonToggleGroup
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.InputStream
@@ -42,17 +48,18 @@ import java.util.Objects
 
 class SettingsActivity : BaseLockActivity() {
 
-    private lateinit var switchFingerprint: SwitchMaterial
+    private lateinit var switchFingerprint: MaterialSwitch
     private lateinit var btnLockVault: Button
-    private lateinit var btnExport: Button
-    private lateinit var btnImport: Button
-    private lateinit var btnGithub: Button
-    private lateinit var btnCheckUpdates: Button
-    private lateinit var btnSubmitFeedback: Button
+    private lateinit var btnExport: View
+    private lateinit var btnImport: View
+    private lateinit var btnGithub: View
+    private lateinit var btnCheckUpdates: View
+    private lateinit var btnSubmitFeedback: View
     private lateinit var prefs: SharedPreferences
     private lateinit var vaultManager: VaultManager
 
-    private lateinit var spinnerAutoLock: Spinner
+    private lateinit var rowAutoLock: View
+    private lateinit var tvAutoLockValue: TextView
 
     private val createDocumentLauncher: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
@@ -64,16 +71,26 @@ class SettingsActivity : BaseLockActivity() {
             onBackupFileOpened(uri)
         }
 
-    private lateinit var rgThemeMode: RadioGroup
-    private lateinit var rbLight: RadioButton
-    private lateinit var rbDark: RadioButton
-    private lateinit var rbSystem: RadioButton
+    private lateinit var toggleThemeMode: MaterialButtonToggleGroup
+    private var isRestoringThemeMode = false
     private lateinit var llColorPalette: GridLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeHelper.applyTheme(this)
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_setting)
+
+        val settingsRoot: View = findViewById(R.id.settingsRoot)
+        val settingsScrollView: ScrollView = findViewById(R.id.settingsScrollView)
+        ViewCompat.setOnApplyWindowInsetsListener(settingsRoot) { v, windowInsets ->
+            val insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            v.setPadding(insets.left, insets.top, insets.right, 0)
+            settingsScrollView.setPadding(0, 0, 0, insets.bottom)
+            windowInsets
+        }
 
         prefs = getSharedPreferences("secure_pass_prefs", MODE_PRIVATE)
         vaultManager = VaultManager(this)
@@ -83,19 +100,17 @@ class SettingsActivity : BaseLockActivity() {
 
         switchFingerprint = findViewById(R.id.switchFingerprint)
         val tvLastCodeTime: TextView = findViewById(R.id.tvLastCodeTime)
-        val btnChangeCode: Button = findViewById(R.id.btnChangeCode)
+        val btnChangeCode: View = findViewById(R.id.btnChangeCode)
         btnLockVault = findViewById(R.id.btnLockVault)
-        findViewById<Button>(R.id.btnAutofill).setOnClickListener {
+        findViewById<View>(R.id.btnAutofill).setOnClickListener {
             startActivity(Intent(android.provider.Settings.ACTION_REQUEST_SET_AUTOFILL_SERVICE, "package:$packageName".toUri()))
         }
 
         // Theme controls
-        rgThemeMode = findViewById(R.id.rgThemeMode)
-        rbLight = findViewById(R.id.rbLight)
-        rbDark = findViewById(R.id.rbDark)
-        rbSystem = findViewById(R.id.rbSystem)
+        toggleThemeMode = findViewById(R.id.toggleThemeMode)
         llColorPalette = findViewById(R.id.llColorPalette)
-        spinnerAutoLock = findViewById(R.id.spinnerAutoLock)
+        rowAutoLock = findViewById(R.id.rowAutoLock)
+        tvAutoLockValue = findViewById(R.id.tvAutoLockValue)
         btnExport = findViewById(R.id.btnExport)
         btnImport = findViewById(R.id.btnImport)
         btnGithub = findViewById(R.id.btnGithub)
@@ -103,10 +118,13 @@ class SettingsActivity : BaseLockActivity() {
         btnSubmitFeedback = findViewById(R.id.btnSubmitFeedback)
 
         // App Icon and Swipe control
-        val switchSyncIcon: SwitchMaterial = findViewById(R.id.switchSyncIcon)
-        val spinnerAppIcon: Spinner = findViewById(R.id.spinnerAppIcon)
-        val spinnerSwipeRight: Spinner = findViewById(R.id.spinnerSwipeRight)
-        val spinnerSwipeLeft: Spinner = findViewById(R.id.spinnerSwipeLeft)
+        val switchSyncIcon: MaterialSwitch = findViewById(R.id.switchSyncIcon)
+        val rowAppIcon: View = findViewById(R.id.rowAppIcon)
+        val tvAppIconValue: TextView = findViewById(R.id.tvAppIconValue)
+        val rowSwipeRight: View = findViewById(R.id.rowSwipeRight)
+        val tvSwipeRightValue: TextView = findViewById(R.id.tvSwipeRightValue)
+        val rowSwipeLeft: View = findViewById(R.id.rowSwipeLeft)
+        val tvSwipeLeftValue: TextView = findViewById(R.id.tvSwipeLeftValue)
 
         // Set initial switch state
         val fingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false)
@@ -121,8 +139,16 @@ class SettingsActivity : BaseLockActivity() {
 
         // Restore theme selections
         restoreThemeSettings()
-        setupAutoLockSpinner()
-        setupAppIconAndSwipes(switchSyncIcon, spinnerAppIcon, spinnerSwipeRight, spinnerSwipeLeft)
+        setupAutoLockRow()
+        setupAppIconAndSwipes(
+            switchSyncIcon,
+            rowAppIcon,
+            tvAppIconValue,
+            rowSwipeRight,
+            tvSwipeRightValue,
+            rowSwipeLeft,
+            tvSwipeLeftValue
+        )
 
         // Fingerprint toggle listener
         switchFingerprint.setOnCheckedChangeListener { _, isChecked ->
@@ -163,10 +189,11 @@ class SettingsActivity : BaseLockActivity() {
         }
 
         // Theme mode listener
-        rgThemeMode.setOnCheckedChangeListener { _, checkedId ->
+        toggleThemeMode.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked || isRestoringThemeMode) return@addOnButtonCheckedListener
             val mode: Int = when (checkedId) {
-                R.id.rbLight -> 0
-                R.id.rbDark -> 1
+                R.id.btnThemeLight -> 0
+                R.id.btnThemeDark -> 1
                 else -> 2 // system
             }
             prefs.edit { putInt(KEY_THEME_MODE, mode) }
@@ -205,42 +232,45 @@ class SettingsActivity : BaseLockActivity() {
     }
 
     private fun restoreThemeSettings() {
+        isRestoringThemeMode = true
         val themeMode = prefs.getInt(KEY_THEME_MODE, 2)
-        when (themeMode) {
-            0 -> rbLight.isChecked = true
-            1 -> rbDark.isChecked = true
-            else -> rbSystem.isChecked = true
+        val buttonId = when (themeMode) {
+            0 -> R.id.btnThemeLight
+            1 -> R.id.btnThemeDark
+            else -> R.id.btnThemeSystem
         }
+        toggleThemeMode.check(buttonId)
+        isRestoringThemeMode = false
     }
 
-    private fun setupAutoLockSpinner() {
+    private fun setupAutoLockRow() {
         val options = arrayOf("Never", "1 minute", "5 minutes", "15 minutes", "30 minutes")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, options)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerAutoLock.adapter = adapter
-
         val currentTime = prefs.getLong(KEY_AUTO_LOCK, 0)
-        for (i in AUTO_LOCK_VALUES.indices) {
-            if (Objects.equals(AUTO_LOCK_VALUES[i], currentTime)) {
-                spinnerAutoLock.setSelection(i)
-                break
-            }
-        }
+        var selectedIndex = AUTO_LOCK_VALUES.indexOfFirst { Objects.equals(it, currentTime) }.coerceAtLeast(0)
+        tvAutoLockValue.text = options[selectedIndex]
 
-        spinnerAutoLock.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                prefs.edit { putLong(KEY_AUTO_LOCK, AUTO_LOCK_VALUES[position]) }
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        rowAutoLock.setOnClickListener {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Auto-Lock Timer")
+                .setSingleChoiceItems(options, selectedIndex) { dialog, which ->
+                    selectedIndex = which
+                    prefs.edit { putLong(KEY_AUTO_LOCK, AUTO_LOCK_VALUES[which]) }
+                    tvAutoLockValue.text = options[which]
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
         }
     }
 
     private fun setupAppIconAndSwipes(
-        switchSyncIcon: SwitchMaterial,
-        spinnerAppIcon: Spinner,
-        spinnerSwipeRight: Spinner,
-        spinnerSwipeLeft: Spinner
+        switchSyncIcon: MaterialSwitch,
+        rowAppIcon: View,
+        tvAppIconValue: TextView,
+        rowSwipeRight: View,
+        tvSwipeRightValue: TextView,
+        rowSwipeLeft: View,
+        tvSwipeLeftValue: TextView
     ) {
         val syncEnabled = prefs.getBoolean("sync_icon_palette", true)
         switchSyncIcon.isChecked = syncEnabled
@@ -256,21 +286,23 @@ class SettingsActivity : BaseLockActivity() {
             }
         }
 
-        val iconAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ThemeHelper.iconOptions)
-        iconAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerAppIcon.adapter = iconAdapter
-        val currentIconIndex = prefs.getInt("custom_app_icon", 0).coerceIn(ThemeHelper.iconOptions.indices)
-        spinnerAppIcon.setSelection(currentIconIndex)
+        var currentIconIndex = prefs.getInt("custom_app_icon", 0).coerceIn(ThemeHelper.iconOptions.indices)
+        tvAppIconValue.text = ThemeHelper.iconOptions[currentIconIndex]
 
-        spinnerAppIcon.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                prefs.edit { putInt("custom_app_icon", position) }
-                if (!prefs.getBoolean("sync_icon_palette", true)) {
-                    ThemeHelper.updateAppIcon(this@SettingsActivity, position)
+        rowAppIcon.setOnClickListener {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Custom App Icon Color")
+                .setSingleChoiceItems(ThemeHelper.iconOptions, currentIconIndex) { dialog, which ->
+                    currentIconIndex = which
+                    prefs.edit { putInt("custom_app_icon", which) }
+                    tvAppIconValue.text = ThemeHelper.iconOptions[which]
+                    if (!prefs.getBoolean("sync_icon_palette", true)) {
+                        ThemeHelper.updateAppIcon(this@SettingsActivity, which)
+                    }
+                    dialog.dismiss()
                 }
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+                .setNegativeButton("Cancel", null)
+                .show()
         }
 
         ThemeHelper.updateAppIcon(
@@ -290,50 +322,94 @@ class SettingsActivity : BaseLockActivity() {
             "Share Credential (Indigo)",
             "View Details (Teal)"
         )
-        val swipeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, swipeOptions)
-        swipeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
 
-        spinnerSwipeRight.adapter = swipeAdapter
-        spinnerSwipeLeft.adapter = swipeAdapter
+        var swipeRightIndex = prefs.getInt("swipe_right_action", 1).coerceIn(swipeOptions.indices)
+        var swipeLeftIndex = prefs.getInt("swipe_left_action", 2).coerceIn(swipeOptions.indices)
+        tvSwipeRightValue.text = swipeOptions[swipeRightIndex]
+        tvSwipeLeftValue.text = swipeOptions[swipeLeftIndex]
 
-        spinnerSwipeRight.setSelection(prefs.getInt("swipe_right_action", 1))
-        spinnerSwipeLeft.setSelection(prefs.getInt("swipe_left_action", 2))
-
-        spinnerSwipeRight.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                prefs.edit { putInt("swipe_right_action", position) }
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        rowSwipeRight.setOnClickListener {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Swipe Right Action")
+                .setSingleChoiceItems(swipeOptions, swipeRightIndex) { dialog, which ->
+                    swipeRightIndex = which
+                    prefs.edit { putInt("swipe_right_action", which) }
+                    tvSwipeRightValue.text = swipeOptions[which]
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
         }
 
-        spinnerSwipeLeft.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                prefs.edit { putInt("swipe_left_action", position) }
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        rowSwipeLeft.setOnClickListener {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Swipe Left Action")
+                .setSingleChoiceItems(swipeOptions, swipeLeftIndex) { dialog, which ->
+                    swipeLeftIndex = which
+                    prefs.edit { putInt("swipe_left_action", which) }
+                    tvSwipeLeftValue.text = swipeOptions[which]
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
         }
     }
 
     private fun buildColorPalette() {
         llColorPalette.removeAllViews()
         val currentPalette = prefs.getInt(KEY_COLOR_PALETTE, 0)
+        val density = resources.displayMetrics.density
+        val swatchSize = (40 * density).toInt()
+        val touchSize = (48 * density).toInt()
+        val ringPad = (4 * density).toInt()
+        val strokePx = (2 * density).toInt().coerceAtLeast(1)
+        val checkSize = (20 * density).toInt()
+        val marginPx = (4 * density).toInt()
 
         for (i in PALETTE_COLOR_RES_IDS.indices) {
-            val colorCircle = View(this)
-            val size = resources.getDimension(androidx.appcompat.R.dimen.abc_action_bar_default_height_material).toInt() / 2
-            val params = GridLayout.LayoutParams()
-            params.width = size
-            params.height = size
-            params.setMargins(16, 16, 16, 16)
-            colorCircle.layoutParams = params
-            colorCircle.setBackgroundColor(getColor(PALETTE_COLOR_RES_IDS[i]))
-            if (i == currentPalette) {
-                colorCircle.setBackgroundResource(androidx.appcompat.R.drawable.abc_btn_colored_material)
+            val paletteColor = getColor(PALETTE_COLOR_RES_IDS[i])
+            val isSelected = i == currentPalette
+
+            val container = FrameLayout(this).apply {
+                layoutParams = GridLayout.LayoutParams().apply {
+                    width = touchSize
+                    height = touchSize
+                    setMargins(marginPx, marginPx, marginPx, marginPx)
+                }
+                if (isSelected) {
+                    background = GradientDrawable().apply {
+                        shape = GradientDrawable.OVAL
+                        setColor(Color.TRANSPARENT)
+                        setStroke(strokePx, getColor(R.color.m3_on_surface))
+                    }
+                    setPadding(ringPad, ringPad, ringPad, ringPad)
+                } else {
+                    setPadding(ringPad, ringPad, ringPad, ringPad)
+                }
             }
 
-            colorCircle.setOnClickListener {
+            val circle = View(this).apply {
+                layoutParams = FrameLayout.LayoutParams(swatchSize, swatchSize, Gravity.CENTER)
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(paletteColor)
+                }
+            }
+            container.addView(circle)
+
+            if (isSelected) {
+                val checkIcon = ImageView(this).apply {
+                    layoutParams = FrameLayout.LayoutParams(checkSize, checkSize, Gravity.CENTER)
+                    setImageResource(R.drawable.ic_check_rounded)
+                    val luminance = 0.299 * Color.red(paletteColor) +
+                        0.587 * Color.green(paletteColor) +
+                        0.114 * Color.blue(paletteColor)
+                    setColorFilter(if (luminance > 186) Color.BLACK else Color.WHITE)
+                }
+                container.addView(checkIcon)
+            }
+
+            container.setOnClickListener {
                 prefs.edit { putInt(KEY_COLOR_PALETTE, i) }
                 ThemeHelper.applyTheme(this@SettingsActivity)
                 if (prefs.getBoolean("sync_icon_palette", true)) {
@@ -341,7 +417,7 @@ class SettingsActivity : BaseLockActivity() {
                 }
                 recreate()
             }
-            llColorPalette.addView(colorCircle)
+            llColorPalette.addView(container)
         }
     }
 

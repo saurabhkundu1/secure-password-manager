@@ -1,6 +1,22 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.SecurePass" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Customize your dark theme here if needed -->
+    <style name="Theme.SecurePass" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/palette_teal_primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/m3_surface_container_high</item>
+        <item name="colorOnPrimaryContainer">@color/palette_teal_primary</item>
+        <item name="colorSecondary">@color/palette_teal_primary</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/m3_surface_container_high</item>
+        <item name="colorOnSecondaryContainer">@color/m3_on_surface</item>
+        <item name="colorTertiary">@color/palette_teal_variant</item>
+        <item name="colorControlActivated">@color/palette_teal_primary</item>
+        <item name="colorSurface">@color/m3_surface</item>
+        <item name="colorSurfaceContainer">@color/m3_surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/m3_surface_container_high</item>
+        <item name="colorOnSurface">@color/m3_on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/m3_on_surface_variant</item>
+        <item name="colorOutlineVariant">@color/m3_outline_variant</item>
+        <item name="android:windowBackground">@color/m3_surface</item>
     </style>
 </resources>

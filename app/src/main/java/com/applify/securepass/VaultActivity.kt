@@ -12,11 +12,15 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -48,18 +52,39 @@ class VaultActivity : BaseLockActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeHelper.applyTheme(this)
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_vault)
 
         vaultManager = VaultManager(this)
 
         // Bind views
+        val vaultRoot: View = findViewById(R.id.vaultRoot)
         val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
+        toolbar.overflowIcon?.setTint(getColor(R.color.m3_on_surface))
 
         recyclerView = findViewById(R.id.recyclerViewVault)
         layoutEmpty = findViewById(R.id.layoutEmpty)
         etSearch = findViewById(R.id.etSearch)
         val fabAdd: FloatingActionButton = findViewById(R.id.fabAdd)
+        val baseFabMargin = (fabAdd.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
+        val baseListBottomPad = recyclerView.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(vaultRoot) { v, windowInsets ->
+            val insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            v.setPadding(insets.left, insets.top, insets.right, 0)
+            recyclerView.setPadding(
+                recyclerView.paddingLeft,
+                recyclerView.paddingTop,
+                recyclerView.paddingRight,
+                baseListBottomPad + insets.bottom
+            )
+            val lp = fabAdd.layoutParams as ViewGroup.MarginLayoutParams
+            lp.bottomMargin = baseFabMargin + insets.bottom
+            fabAdd.layoutParams = lp
+            windowInsets
+        }
         btnAddFirst = findViewById(R.id.btnAddFirst)
         tvVaultCount = findViewById(R.id.tvVaultCount)
         chipGroupFilter = findViewById(R.id.chipGroupFilter)
@@ -166,11 +191,9 @@ class VaultActivity : BaseLockActivity() {
                 .keys
             adapter.reusedPasswords = reused
 
-            val weakCount = allEntries.count {
-                it.password.isNotBlank() && PasswordStrengthEstimator.estimate(it.password).score <= 1
-            }
-            val baseText = "${allEntries.size}\n${if (allEntries.size == 1) "item" else "items"}"
-            tvVaultCount.text = if (weakCount > 0) "$baseText (⚠️$weakCount)" else "$baseText (✓)"
+            val weakCount = allEntries.count { isWeakPassword(it.password) }
+            val baseText = "${allEntries.size} ${if (allEntries.size == 1) "item" else "items"}"
+            tvVaultCount.text = if (weakCount > 0) "$baseText · ⚠️$weakCount" else baseText
 
             filterEntries(etSearch.text?.toString() ?: "")
             toggleEmptyState()
@@ -193,9 +216,7 @@ class VaultActivity : BaseLockActivity() {
 
         val filtered = when (currentFilter) {
             "FAVORITES" -> matchingQuery.filter { it.isFavorite }
-            "WEAK" -> matchingQuery.filter {
-                it.password.isNotBlank() && PasswordStrengthEstimator.estimate(it.password).score <= 1
-            }
+            "WEAK" -> matchingQuery.filter { isWeakPassword(it.password) }
             "REUSED" -> matchingQuery.filter {
                 it.password.isNotBlank() && adapter.reusedPasswords.contains(it.password)
             }
@@ -283,11 +304,10 @@ class VaultActivity : BaseLockActivity() {
         for (item in allEntries) {
             if (item.totpSecret.isNotBlank()) totpCount++
             if (item.password.isNotBlank()) {
-                val score = PasswordStrengthEstimator.estimate(item.password).score
-                when {
-                    score >= 3 -> strongCount++
-                    score == 2 -> fairCount++
-                    else -> weakCount++
+                when (PasswordStrengthEstimator.estimate(item.password).level) {
+                    StrengthLevel.STRONG, StrengthLevel.VERY_STRONG -> strongCount++
+                    StrengthLevel.FAIR -> fairCount++
+                    StrengthLevel.WEAK, StrengthLevel.VERY_WEAK -> weakCount++
                 }
             }
         }
@@ -315,6 +335,12 @@ class VaultActivity : BaseLockActivity() {
             .setMessage(report.toString())
             .setPositiveButton(android.R.string.ok, null)
             .show()
+    }
+
+    private fun isWeakPassword(password: String): Boolean {
+        if (password.isBlank()) return false
+        val level = PasswordStrengthEstimator.estimate(password).level
+        return level == StrengthLevel.VERY_WEAK || level == StrengthLevel.WEAK
     }
 
     private fun showPasswordReuseCheck() {

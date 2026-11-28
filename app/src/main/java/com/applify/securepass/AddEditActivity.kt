@@ -17,6 +17,9 @@ import android.widget.RadioGroup
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.applify.securepass.data.SitePreset
 import com.applify.securepass.data.VaultItem
 import com.applify.securepass.data.VaultManager
@@ -42,7 +45,26 @@ class AddEditActivity : BaseLockActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeHelper.applyTheme(this)
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_add_edit)
+
+        val addEditRoot: View = findViewById(R.id.addEditRoot)
+        val baseLeft = addEditRoot.paddingLeft
+        val baseTop = addEditRoot.paddingTop
+        val baseRight = addEditRoot.paddingRight
+        val baseBottom = addEditRoot.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(addEditRoot) { v, windowInsets ->
+            val insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            v.setPadding(
+                baseLeft + insets.left,
+                baseTop + insets.top,
+                baseRight + insets.right,
+                baseBottom + insets.bottom
+            )
+            windowInsets
+        }
 
         vaultManager = VaultManager(this)
         userCode = intent.getStringExtra("USER_CODE")
